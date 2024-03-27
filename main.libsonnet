@@ -1,21 +1,27 @@
-local file = importstr './example.jsonnet';
+local file = importstr './test/object.jsonnet';
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 local s = import '../../crdsonnet/astsonnet/schema.libsonnet';
 
 local l = {
   local stripLeadingComments(s) =
     local str = stripWhitespace(s);
+    local findIndex(t, s) =
+      local f = std.findSubstr(t, s);
+      if std.length(f) > 0
+      then f[0]
+      else std.length(s);
     local stripped =
       if std.startsWith(str, '//')
-      then str[std.findSubstr('\n', str)[0]:]
+      then str[findIndex('\n', str):]
       else if std.startsWith(str, '#')
-      then str[std.findSubstr('\n', str)[0]:]
+      then str[findIndex('\n', str):]
       else if std.startsWith(str, '/*')
-      then str[std.findSubstr('*/', str)[0] + 2:]
+      then str[findIndex('*/', str) + 2:]
       else null;
     if stripped != null
     then stripLeadingComments(stripped)
-    else str,
+    else stripWhitespace(s)
+  ,
 
   local stripWhitespace(str) = std.stripChars(str, [' ', '\t', '\n', '\r']),
 
@@ -86,6 +92,14 @@ local l = {
       for op in binaryoperators
     ]),
 
+  parse(str):
+    local return = parseExpr(str);
+    local remainder = std.get(return, 'remainder', '');
+
+    if remainder == ''
+    then return
+    else error 'Unexpected: "%s" while parsing terminal' % remainder,
+
   local parseExpr(str) =
     local s = stripLeadingComments(str);
     assert s != '' : 'Unexpected end of file';
@@ -94,9 +108,9 @@ local l = {
         function(i) i != {},
         [
           parseIdOrLiteral(s),
-          // TODO: parseNumber(s),
           parseString(s),
-          // TODO: parseObject(s),
+          parseNumber(s),
+          parseObject(s),
           parseArray(s),
           parseSuper(s, in_object=false),  // TODO: use in parseObject()
           parseLocalBind(s),
@@ -112,27 +126,27 @@ local l = {
         ]
       );
 
+    local found_more =
+      std.filter(
+        function(i) i != {},
+        [
+          parseFieldaccess(found[0]),
+          parseIndexing(found[0]),
+          parseFunctioncall(found[0]),
+          parseBinary(found[0]),
+          parseImplicitPlus(found[0]),
+          parseExprInSuper(found[0], in_object=false),  // TODO: use in parseObject()
+        ]
+      );
+
     if std.length(found) > 1
     then error 'more than 1 expr matched: %s' % std.manifestJson(found)
-    else if std.length(found) != 0
+    else if std.length(found) == 1
     then
-      local remainder = std.get(found[0], 'remainder', '');
-      local ff =
-        std.filter(
-          function(i) i != {},
-          [
-            parseFieldaccess(found[0]),
-            parseIndexing(found[0]),
-            parseFunctioncall(found[0]),
-            parseBinary(found[0]),
-            // TODO: parseImplicitPlus(found[0]), depends on parseObject()
-            parseExprInSuper(found[0], in_object=false),  // TODO: use in parseObject()
-          ]
-        );
-      if ff != []
-      then ff[0]
+      if found_more != []
+      then found_more[0]
       else found[0]
-    else error 'Unexpected: "%s" while parsing terminal' % s,
+    else {},
 
   local parseIdOrLiteral(s, strict=false) =
     local str = stripLeadingComments(s);
@@ -150,10 +164,10 @@ local l = {
         std.foldl(
           function(acc, c)
             if 'remainder' in acc
-            then acc { remainder+: c }
+            then acc + { remainder+: c }
             else if !isValidIdChar(c)
-            then acc { remainder: c }
-            else acc { value+: c },
+            then acc + { remainder: c }
+            else acc + { value+: c },
           std.stringChars(str),
           { value: '' }
         )
@@ -217,15 +231,15 @@ local l = {
         std.foldl(
           function(acc, c)
             if 'type' in acc
-            then acc { remainder+: c }
+            then acc + { remainder+: c }
             else if acc.value == '' && !('startChar' in acc)
-            then acc { startChar:: c }
+            then acc + { startChar:: c }
             else if (c == acc.startChar && !isEscaped(acc.value))
             then {
               type: 'string',
               string: acc.value,
             }
-            else acc { value+: c },
+            else acc + { value+: c },
           std.stringChars(str),
           {
             value:: '',
@@ -273,6 +287,142 @@ local l = {
       type: parsed.type,
       string: parsed.string,
     } + addRemainder(std.get(parsed, 'remainder', ''))
+    else {},
+
+  local parseNumber(str) =
+    local parsed =
+      std.foldl(
+        function(acc, c)
+          if acc.break
+          then acc
+          else
+            acc
+            + (if xtd.ascii.isNumber(c)
+               then { string+: c }
+               else { break: true }),
+        std.stringChars(str),
+        { string: '', break: false }
+      );
+    if parsed.string != ''
+    then {
+      type: 'number',
+      number: parsed.string,
+    } + addRemainder(str[std.length(parsed.string):])
+    else {},
+
+  local parseObject(str) =
+    local parseRemainder(remainder) =
+      if std.startsWith(remainder, '}')
+      then []
+      else
+        local member = parseMember(remainder);
+        local next_remainder = std.get(member, 'remainder', '');
+        [member] + (
+          if std.startsWith(next_remainder, '}')
+             || (std.startsWith(next_remainder, ',')
+                 && std.startsWith(stripLeadingComments(next_remainder[1:]), '}'))
+          then []
+          else if std.startsWith(next_remainder, ',')
+          then parseRemainder(stripLeadingComments(member.remainder[1:]))
+          else if std.startsWith(next_remainder, 'for')
+          then error 'object_forloop not implemented'
+          else error 'Expected a comma before next field, but got "%s"' % next_remainder
+        );
+    local members = parseRemainder(stripLeadingComments(str[1:]));
+
+    local remainder =
+      if std.length(members) == 0
+      then str[1:]
+      else std.get(std.reverse(members)[0], 'remainder', '');
+
+    local final_remainder =
+      if std.startsWith(remainder, '}')
+      then remainder[1:]
+      else if std.startsWith(remainder, ',')
+              && std.startsWith(stripLeadingComments(remainder[1:]), '}')
+      then stripLeadingComments(remainder[1:])[1:]
+      else error 'Expected "}" but got "%s"' % remainder;
+
+    if std.startsWith(str, '{')
+    then {
+      type: 'object',
+      members: members,
+    } + addRemainder(final_remainder)
+    else {},
+
+  local parseMember(str) =
+    local found =
+      std.filter(
+        function(i) i != {},
+        [
+          parseObjectLocal(str),
+          parseAssertion(str),
+          parseField(str),
+        ]
+      );
+    if std.length(found) > 1
+    then error 'more than 1 member matched: %s' % std.manifestJson(found)
+    else if std.length(found) == 1
+    then found[0]
+    else {},
+
+  local parseObjectLocal(str) =
+    local bind = parseBind(str[std.length('local'):]);
+    if std.startsWith(str, 'local')
+    then {
+      type: 'object_local',
+      bind: bind,
+    } + addRemainder(std.get(bind, 'remainder', ''))
+    else {},
+
+  local parseField(str) =
+    local fieldname = parseFieldname(str);
+
+    local additive = (fieldname.remainder[0] == '+');
+    local additive_remainder =
+      if additive
+      then fieldname.remainder[1:]
+      else fieldname.remainder;
+
+    local h =
+      if additive_remainder[0:3] == ':::'
+      then ':::'
+      else if additive_remainder[0:2] == '::'
+      then '::'
+      else if additive_remainder[0] == ':'
+      then ':'
+      else error 'Expected token ":", "::" or ":::" but got "%s"' % additive_remainder;
+
+    local hidden_remainder = additive_remainder[std.length(h):];
+
+    local expr = parseExpr(hidden_remainder);
+    if fieldname != {}
+    then {
+      type: 'field',
+      fieldname: fieldname,
+      [if additive then 'additive']: additive,
+      h: h,
+      expr: expr,
+    } + addRemainder(std.get(expr, 'remainder', ''))
+    else {},
+
+  local parseFieldname(str) =
+    local id = parseIdOrLiteral(str);
+    local string = parseString(str);
+    local expr = parseExpr(str[1:]);
+    local expr_remainder =
+      if std.startsWith(std.get(expr, 'remainder', ''), ']')
+      then expr.remainder[1:]
+      else error 'Expected "]" but got "%s"' % std.get(expr, 'remainder', '');
+    if std.startsWith(str, '[')
+    then {
+      type: 'fieldname_expr',
+      expr: expr,
+    } + addRemainder(expr_remainder)
+    else if id != {} && id.type == 'id'
+    then id
+    else if string != {}
+    then string
     else {},
 
   local parseArray(str) =
@@ -612,12 +762,22 @@ local l = {
   local parseUnary(str) =
     local expr = parseExpr(str[1:]);
     if std.member(['-', '+', '!', '~'], str[0])
-       && expr != []
     then {
       type: 'unary',
       unaryop: str[0],
       expr: expr,
     } + addRemainder(std.get(expr, 'remainder', ''))
+    else {},
+
+  local parseImplicitPlus(obj) =
+    local remainder = std.get(obj, 'remainder', '');
+    local object = parseObject(remainder);
+    if object != {}
+    then {
+      type: 'implicit_plus',
+      expr: obj,
+      object: object,
+    } + addRemainder(std.get(object, 'remainder', ''))
     else {},
 
   local parseAnonymousFunction(str) =
@@ -764,10 +924,6 @@ local l = {
       expr: expr,
     } + addRemainder(remainder[1:])
     else {},
-
-  parseExpr: parseExpr,
 };
 
-s.objectToString(
-  l.parseExpr(file)
-)
+l.parse(file)
