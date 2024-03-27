@@ -93,14 +93,14 @@ local l = {
     ]),
 
   parse(str):
-    local return = parseExpr(str);
+    local return = parseExpr(str, false);
     local remainder = std.get(return, 'remainder', '');
 
     if remainder == ''
     then return
     else error 'Unexpected: "%s" while parsing terminal' % remainder,
 
-  local parseExpr(str) =
+  local parseExpr(str, in_object=true) =
     local s = stripLeadingComments(str);
     assert s != '' : 'Unexpected end of file';
     local found =
@@ -112,7 +112,7 @@ local l = {
           parseNumber(s),
           parseObject(s),
           parseArray(s),
-          parseSuper(s, in_object=false),  // TODO: use in parseObject()
+          parseSuper(s, in_object),
           parseLocalBind(s),
           parseConditional(s),
           parseUnary(s),
@@ -135,7 +135,7 @@ local l = {
           parseFunctioncall(found[0]),
           parseBinary(found[0]),
           parseImplicitPlus(found[0]),
-          parseExprInSuper(found[0], in_object=false),  // TODO: use in parseObject()
+          parseExprInSuper(found[0], in_object),
         ]
       );
 
@@ -214,79 +214,101 @@ local l = {
     else error 'Expected token IDENTIFIER but got "%s"' % parsed[parsed.type],
 
   local parseString(str) =
+    if std.startsWith(str, "'")
+       || std.startsWith(str, '"')
+    then parseQuotedString(str)
+    else if std.startsWith(str, '|||')
+    then parseVerbatimString(str)
+    else {},
+
+
+  local parseQuotedString(str) =
     local isEscaped(str) =
       std.foldl(
         function(acc, c)
-          if c == '\\'
-          then !acc
-          else acc,
+          if acc.break
+          then acc
+          else if c == '\\'
+          then acc + { escaped: !acc.escaped }
+          else acc + { break: true },
         std.reverse(std.stringChars(str)),
-        false
+        { escaped: false, break: false }
+      ).escaped;
+    local parsed =
+      std.foldl(
+        function(acc, c)
+          acc + { c: c }
+          + (if acc.break
+             then {}
+             else if (c == acc.startChar && !isEscaped(acc.value))
+             then {
+               break: true,
+               endChar: c,
+             }
+             else { value+: c }),
+        std.stringChars(str)[1:],
+        {
+          c: '',
+          break: false,
+          value: '',
+          startChar: str[0],
+          endChar: error 'Unterminated String',
+        },
       );
 
-    local parsed =
-      if std.startsWith(str, "'")
-         || std.startsWith(str, '"')
-      then
-        std.foldl(
-          function(acc, c)
-            if 'type' in acc
-            then acc + { remainder+: c }
-            else if acc.value == '' && !('startChar' in acc)
-            then acc + { startChar:: c }
-            else if (c == acc.startChar && !isEscaped(acc.value))
-            then {
-              type: 'string',
-              string: acc.value,
-            }
-            else acc + { value+: c },
-          std.stringChars(str),
-          {
-            value:: '',
-            string: error 'Unterminated string',
-          },
-        )
-      else if std.startsWith(str, '|||')
-      then
-        local lines = std.split(str, '\n');
-        if lines[0] == '|||'
-        then
-          local countWhitespacesOnFirstLine =
-            local spaces = std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' '));
-            if spaces > 0
-            then spaces
-            else error "Text block's first line must start with whitespace";
+    local remainder = str[std.length(parsed.startChar + parsed.value + parsed.endChar):];
 
-          local stringlines =
-            local spaces = std.join('', std.map(function(i) ' ', std.range(1, countWhitespacesOnFirstLine)));
-            local f =
-              std.foldl(
-                function(acc, line)
-                  acc + (
-                    if acc.break
-                    then {}
-                    else if std.startsWith(line, spaces)
-                    then { lines+: [line[countWhitespacesOnFirstLine:]] }
-                    else { lines+: [line], break: true }
-                  ),
-                lines[1:],
-                { break: false }
-              );
-            if std.startsWith(std.reverse(f.lines)[0], '|||')
-            then f.lines
-            else error 'Text block not terminated with |||';
-          {
-            type: 'string',
-            string: std.join('\n', stringlines[:std.length(stringlines) - 1]) + '\n',
-          } + addRemainder(std.reverse(stringlines)[0][3:])
-        else { type: lines, string: std.join('\n', lines) }
-      else {};
-
-    if parsed != {}
+    if (std.startsWith(str, "'")
+        || std.startsWith(str, '"'))
     then {
-      type: parsed.type,
-      string: parsed.string,
-    } + addRemainder(std.get(parsed, 'remainder', ''))
+      type: 'string',
+      string: parsed.value,  //replaceEscapeChars,
+    } + addRemainder(remainder)
+    else {},
+
+  local parseVerbatimString(str) =
+    local lines = std.split(str, '\n');
+    if lines[0] == '|||'
+    then
+      local countwhitespacesonfirstline =
+        local spaces = std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' '));
+        if spaces > 0
+        then spaces
+        else error "text block's first line must start with whitespace";
+
+      local spaces =
+        std.join(
+          '',
+          std.map(
+            function(i) ' ',
+            std.range(1, countwhitespacesonfirstline)
+          )
+        );
+      local stringlines =
+        std.foldl(
+          function(acc, line)
+            acc + (
+              if acc.break
+              then {}
+              else if std.startsWith(line, spaces)
+              then { lines+: [line[countwhitespacesonfirstline:]] }
+              else { lines+: [line], break: true }
+            ),
+          lines[1:],
+          { break: false }
+        ).lines;
+
+      local string =
+        if std.startsWith(std.reverse(stringlines)[0], '|||')
+        then std.join('\n', stringlines[:std.length(stringlines) - 1])
+        else error 'text block not terminated with |||';
+
+      local remainder = std.join('\n', lines[std.length(stringlines) + 1:]);
+      {
+        type: 'string',
+        string: string,
+        verbatim: true,
+      } + addRemainder(remainder)
     else {},
 
   local parseNumber(str) =
@@ -573,7 +595,7 @@ local l = {
     } + addRemainder(final_remainder[1:])
     else {},
 
-  local parseSuper(str, in_object=true) =
+  local parseSuper(str, in_object) =
     if std.startsWith(str, 'super')
     then
       if std.startsWith(str, 'super.')
@@ -583,7 +605,7 @@ local l = {
       else error 'Expected . or [ after super'
     else {},
 
-  local parseFieldaccessSuper(str, in_object=true) =
+  local parseFieldaccessSuper(str, in_object) =
     local id =
       if in_object
       then parseId(str[std.length('super.'):])
@@ -595,16 +617,21 @@ local l = {
     } + addRemainder(std.get(id, 'remainder', ''))
     else {},
 
-  local parseIndexingSuper(str, in_object=true) =
+  local parseIndexingSuper(str, in_object) =
     local expr =
       if in_object
       then parseExpr(str[std.length('super['):])
       else error "Can't use super outside of an object";
+    local r = std.get(expr, 'remainder', '');
+    local remainder =
+      if std.startsWith(r, ']')
+      then r[1:]
+      else error 'Expected "[" but got "%s"' % r;
     if std.startsWith(str, 'super[')
     then {
       type: 'indexing_super',
       expr: expr,
-    } + addRemainder(std.get(expr, 'remainder', ''))
+    } + addRemainder(remainder)
     else {},
 
   local parseFunctioncall(obj) =
@@ -894,14 +921,14 @@ local l = {
     if std.startsWith(str, 'error')
     then
       if expr == {}
-      then error 'error: Unexpected: "%s" while parsing terminal' % std.splitLimit(str[std.length('error'):], ' ', 1)[0]
+      then error 'Unexpected: "%s"' % stripLeadingComments(str[std.length('error'):])
       else {
         type: 'error_expr',
         expr: expr,
       } + addRemainder(std.get(expr, 'remainder', ''))
     else {},
 
-  local parseExprInSuper(obj, in_object=true) =
+  local parseExprInSuper(obj, in_object) =
     local expr =
       if in_object
       then obj
@@ -926,4 +953,10 @@ local l = {
     else {},
 };
 
-l.parse(file)
+local parsed = l.parse(file);
+'/*\nOutput:\n\n'
++ s.objectToString(parsed)
++ '\n\n*/'
++ '\n'
++ '\n'
++ std.manifestJson(parsed)
