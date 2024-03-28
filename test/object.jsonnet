@@ -10,7 +10,7 @@
   local a = i,
   local b = i,
   local c = i,
-  ['' + i]: i,
+  ['' + i](): i,
   local d = i,
   local f = i
   for i in std.range(0, 2)

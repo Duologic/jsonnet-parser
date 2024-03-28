@@ -1,9 +1,8 @@
-local a = function(s='a', b)
+local a(b)  function(s='a', b)
   local a = '#',
         b = '//';
-  error ;
-    assert true; [
-      a
-      for b in d
-    ];
+  assert true; [
+    a
+    for b in d
+  ];
 a(b='a')

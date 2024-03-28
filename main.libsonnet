@@ -1,4 +1,4 @@
-local file = importstr './test/object.jsonnet';
+local file = importstr './example.libsonnet';
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 local s = import '../../crdsonnet/astsonnet/schema.libsonnet';
 
@@ -28,6 +28,9 @@ local l = {
   local addRemainder(str) =
     local s = stripLeadingComments(str);
     { [if s != '' then 'remainder']:: s },
+
+  local expectedError(expected, str) =
+    error 'Expected %s, but got "%s"' % [expected, str[:30]],
 
   local literals = {
     'null': null,
@@ -64,6 +67,8 @@ local l = {
     '$',
   ],
 
+  local unaryoperators = ['-', '+', '!', '~'],
+
   local binaryoperators = [
     '*',
     '/',
@@ -86,6 +91,19 @@ local l = {
     '||',
   ],
 
+  local parseBinaryOperator(str) =
+    local operators = std.sort(
+      [
+        op
+        for op in binaryoperators
+        if std.startsWith(str, op)
+      ],
+      function(i) std.length(i)
+    );
+    if std.length(operators) > 0
+    then operators[0]
+    else '',
+
   local startsWithBinaryOperator(str) =
     std.any([
       std.startsWith(str, op)
@@ -106,24 +124,37 @@ local l = {
     local found =
       std.filter(
         function(i) i != {},
-        [
-          parseIdOrLiteral(s),
-          parseString(s),
-          parseNumber(s),
-          parseObject(s),
-          parseArray(s),
-          parseSuper(s, in_object),
-          parseLocalBind(s),
-          parseConditional(s),
-          parseUnary(s),
-          parseAnonymousFunction(s),
-          parseAssertionExpr(s),
-          parseImport(s, 'import'),
-          parseImport(s, 'importstr'),
-          parseImport(s, 'importbin'),
-          parseErrorExpr(s),
-          parseParenthesis(s),
-        ]
+        if false
+        then []
+        else if std.startsWith(s, '{')
+        then [parseObject(s)]
+        else if std.startsWith(s, '[')
+        then [parseArray(s)]
+        else if std.startsWith(s, 'super')
+        then [parseSuper(s, in_object)]
+        else if std.startsWith(s, 'local')
+        then [parseLocalBind(s)]
+        else if std.startsWith(s, 'if')
+        then [parseConditional(s)]
+        else if std.member(unaryoperators, str[0])
+        then [parseUnary(s)]
+        else if std.startsWith(s, 'function')
+        then [parseAnonymousFunction(s)]
+        else if std.startsWith(s, 'assert')
+        then [parseAssertionExpr(s)]
+        else if std.startsWith(s, 'import')
+        then [parseImport(s)]
+        else if std.startsWith(s, 'error')
+        then [parseErrorExpr(s)]
+        else if std.startsWith(s, '(')
+        then [parseParenthesis(s)]
+        else if std.startsWith(s, '"')
+                || std.startsWith(s, "'")
+                || std.startsWith(s, '|||')
+        then [parseString(s)]
+        else if xtd.ascii.isNumber(s[0])
+        then [parseNumber(s)]
+        else [parseIdOrLiteral(s)]
       );
 
     if std.length(found) > 1
@@ -133,17 +164,23 @@ local l = {
     else {},
 
   local parseExprRemainder(obj, in_object) =
+    local s = std.get(obj, 'remainder', '');
     local found =
       std.filter(
         function(i) i != {},
-        [
-          parseFieldaccess(obj),
-          parseIndexing(obj),
-          parseFunctioncall(obj),
-          parseBinary(obj),
-          parseImplicitPlus(obj),
-          parseExprInSuper(obj, in_object),
-        ]
+        if false
+        then []
+        else if std.startsWith(s, '.')
+        then [parseFieldaccess(obj)]
+        else if std.startsWith(s, '[')
+        then [parseIndexing(obj)]
+        else if std.startsWith(s, '(')
+        then [parseFunctioncall(obj)]
+        else if std.startsWith(s, '{')
+        then [parseImplicitPlus(obj)]
+        else if std.startsWith(s, 'in')
+        then [parseExprInSuper(obj, in_object)]
+        else [parseBinary(obj)]
       );
     if std.length(found) > 1
     then error 'more than 1 expr matched: %s' % std.manifestJson(found)
@@ -205,7 +242,7 @@ local l = {
     local parsed = parseIdOrLiteral(str, strict=true);
     if parsed.type == 'literal'
     then parsed
-    else error 'Expected literal token but got "%s"' % parsed[parsed.type],
+    else expectedError('literal token', parsed[parsed.type]),
 
   local parseId(str) =
     local parsed = parseIdOrLiteral(str, strict=true);
@@ -214,8 +251,8 @@ local l = {
     else if str != '' && parsed.type == 'id'
     then parsed
     else if str == ''
-    then error 'Expected token IDENTIFIER but got end of file'
-    else error 'Expected token IDENTIFIER but got "%s"' % parsed[parsed.type],
+    then expectedError('token IDENTIFIER', str)
+    else expectedError('token IDENTIFIER', parsed[parsed.type]),
 
   local parseString(str) =
     if std.startsWith(str, "'")
@@ -240,7 +277,7 @@ local l = {
     local parsed =
       std.foldl(
         function(acc, c)
-          acc + { c: c }
+          acc
           + (if acc.break
              then {}
              else if (c == acc.startChar && !isEscaped(acc.value))
@@ -251,7 +288,6 @@ local l = {
              else { value+: c }),
         std.stringChars(str)[1:],
         {
-          c: '',
           break: false,
           value: '',
           startChar: str[0],
@@ -265,7 +301,7 @@ local l = {
         || std.startsWith(str, '"'))
     then {
       type: 'string',
-      string: parsed.value,  //replaceEscapeChars,
+      string: parsed.value,
     } + addRemainder(remainder)
     else {},
 
@@ -349,15 +385,15 @@ local l = {
           then []
           else if std.startsWith(next_remainder, ',')
           then parseRemainder(stripLeadingComments(member.remainder[1:]))
-          else if std.startsWith(std.trace(next_remainder, next_remainder), 'for')
+          else if std.startsWith(next_remainder, 'for')
           then []
-          else error 'Expected a comma before next field, but got "%s"' % remainder
+          else error 'Expected a comma before next field, but got "%s"' % std.toString(member)
         );
     local members = parseRemainder(stripLeadingComments(str[1:]));
 
     local last_member = std.reverse(members)[0];
 
-    local fields = std.filter(function(member) member.type == 'field', members);
+    local fields = std.filter(function(member) member.type == 'field' || member.type == 'field_function', members);
     local asserts = std.filter(function(member) member.type == 'assertion', members);
     local field =
       if std.length(asserts) != 0
@@ -369,11 +405,6 @@ local l = {
     local fieldIndex = std.prune(std.mapWithIndex(function(i, m) if m == field then i else null, members))[0];
     local left_object_locals = members[:fieldIndex];
     local right_object_locals = members[fieldIndex + 1:];
-
-    local fieldname =
-      if field.fieldname.type == 'fieldname_expr'
-      then field.fieldname
-      else error 'Object comprehensions can only have [e] fields';
 
     local forspec =
       if std.length(members) >= 1
@@ -407,8 +438,7 @@ local l = {
         type: 'object_forloop',
         forspec: forspec,
         [if compspec != {} then 'compspec']: compspec,
-        fieldname_expr: fieldname,
-        expr: field.expr,
+        field: field,
         left_object_locals: left_object_locals,
         right_object_locals: right_object_locals,
       }
@@ -446,11 +476,23 @@ local l = {
   local parseField(str) =
     local fieldname = parseFieldname(str);
 
-    local additive = (fieldname.remainder[0] == '+');
+    local isFunction = (fieldname.remainder[0] == '(');
+    local params =
+      if isFunction
+      then parseParams(fieldname.remainder[1:])
+      else {};
+
+    local params_remainder = std.get(params, 'remainder', '');
+    local fieldname_remainder =
+      if std.startsWith(params_remainder, ')')
+      then params_remainder[1:]
+      else fieldname.remainder;
+
+    local additive = (fieldname_remainder[0] == '+');
     local additive_remainder =
       if additive
-      then fieldname.remainder[1:]
-      else fieldname.remainder;
+      then fieldname_remainder[1:]
+      else fieldname_remainder;
 
     local h =
       if additive_remainder[0:3] == ':::'
@@ -465,13 +507,22 @@ local l = {
 
     local expr = parseExpr(hidden_remainder);
     if fieldname != {}
-    then {
-      type: 'field',
-      fieldname: fieldname,
-      [if additive then 'additive']: additive,
-      h: h,
-      expr: expr,
-    } + addRemainder(std.get(expr, 'remainder', ''))
+    then
+      (if isFunction
+       then {
+         type: 'field_function',
+         fieldname: fieldname,
+         h: h,
+         expr: expr,
+         params: params,
+       }
+       else {
+         type: 'field',
+         fieldname: fieldname,
+         [if additive then 'additive']: additive,
+         h: h,
+         expr: expr,
+       }) + addRemainder(std.get(expr, 'remainder', ''))
     else {},
 
   local parseFieldname(str) =
@@ -495,7 +546,7 @@ local l = {
 
   local parseArray(str) =
     local parseRemainder(remainder) =
-      local expr = parseExpr(remainder);
+      local expr = parseExpr(std.trace('tick', remainder));
       local next_remainder = std.get(expr, 'remainder', '');
       [expr] + (
         if std.startsWith(next_remainder, ']')
@@ -606,14 +657,23 @@ local l = {
 
   local parseIndexing(obj) =
     local remainder = std.get(obj, 'remainder', '');
-    local expr1 = parseExpr(remainder[1:]);
+    local parseIndex(str, nextChar=':') =
+      local s = stripWhitespace(str);
+      if std.startsWith(s, nextChar)
+      then {
+        type: 'literal',
+        literal: '',
+      } + addRemainder(s)
+      else parseExpr(str);
+
+    local expr1 = parseIndex(remainder[1:]);
     local expr2 =
       if std.startsWith(std.get(expr1, 'remainder', ''), ':')
-      then parseExpr(expr1.remainder[1:])
+      then parseIndex(expr1.remainder[1:])
       else {};
     local expr3 =
       if std.startsWith(std.get(expr2, 'remainder', ''), ':')
-      then parseExpr(expr2.remainder[1:])
+      then parseIndex(expr2.remainder[1:], ']')
       else {};
 
     local exprs =
@@ -624,21 +684,23 @@ local l = {
         );
       if std.length(arr) > 0
       then arr
-      else error 'indexing requires an expression';
+      else error 'indexing requires an expression but got "%s"' % remainder[:30];
 
     local final_remainder =
       local r = std.get(std.reverse(exprs)[0], 'remainder', '');
       if std.startsWith(r, ']')
-      then r
-      else error 'Expected token "]"';
+      then r[1:]
+      else if (std.startsWith(r, ':')
+               && std.startsWith(stripLeadingComments(r[1:]), ']'))
+      then r[2:]
+      else expectedError('token "]"', r);
 
     if std.startsWith(remainder, '[')
-       && std.startsWith(final_remainder, ']')
     then {
       type: 'indexing',
       expr: obj,
       exprs: exprs,
-    } + addRemainder(final_remainder[1:])
+    } + addRemainder(final_remainder)
     else {},
 
   local parseSuper(str, in_object) =
@@ -746,20 +808,36 @@ local l = {
 
   local parseBind(str) =
     local id = parseId(str);
-    local remainder = id.remainder;
+
+    local isFunction = std.startsWith(id.remainder, '(');
+    local params =
+      if isFunction
+      then parseParams(id.remainder[1:])
+      else {};
+
+    local params_remainder = std.get(params, 'remainder', '');
+    local remainder =
+      if std.startsWith(params_remainder, ')')
+      then stripLeadingComments(params_remainder[1:])
+      else id.remainder;
+
     local expr =
       if std.startsWith(remainder, '=')
       then parseExpr(remainder[1:])
-      else if std.startsWith(remainder, '(')
-      then error 'bind_function not implemented'
-      else error 'could not parse bind';
-    if 'remainder' in id
-    then {
-      type: 'bind',
-      id: id,
-      expr: expr,
-    } + addRemainder(std.get(expr, 'remainder', ''))
-    else {},
+      else error 'Expected operator = but got "%s"' % remainder;
+
+    (if std.trace(id.id, isFunction)
+     then {
+       type: 'bind_function',
+       id: id,
+       expr: expr,
+       params: params,
+     }
+     else {
+       type: 'bind',
+       id: id,
+       expr: expr,
+     }) + addRemainder(std.get(expr, 'remainder', '')),
 
   local parseLocalBind(str) =
     local parseRemainder(remainder) =
@@ -790,13 +868,13 @@ local l = {
   local parseConditional(str) =
     local if_expr =
       if std.startsWith(str, 'if')
-      then parseExpr(str[std.length('if '):])
+      then parseExpr(str[std.length('if'):])
       else {};
 
     local then_expr =
       if std.startsWith(std.get(if_expr, 'remainder', ''), 'then')
       then parseExpr(if_expr.remainder[std.length('then'):])
-      else error 'Expected "then"';
+      else expectedError('then', std.get(if_expr, 'remainder', ''));
 
     local else_expr =
       if std.startsWith(std.get(then_expr, 'remainder', ''), 'else')
@@ -820,13 +898,12 @@ local l = {
   local parseBinary(expr) =
     local left_expr = expr;
     local remainder = std.get(left_expr, 'remainder', '');
-    local right_expr = parseExpr(remainder[1:]);
-    if remainder != ''
-       && startsWithBinaryOperator(remainder[0])
-       && right_expr != {}
+    local binaryop = parseBinaryOperator(remainder);
+    local right_expr = parseExpr(remainder[std.length(binaryop):]);
+    if binaryop != ''
     then {
       type: 'binary',
-      binaryop: '+',
+      binaryop: binaryop,
       left_expr: left_expr,
       right_expr: right_expr,
     } + addRemainder(std.get(right_expr, 'remainder', ''))
@@ -834,7 +911,7 @@ local l = {
 
   local parseUnary(str) =
     local expr = parseExpr(str[1:]);
-    if std.member(['-', '+', '!', '~'], str[0])
+    if std.member(unaryoperators, str[0])
     then {
       type: 'unary',
       unaryop: str[0],
@@ -881,19 +958,20 @@ local l = {
         then parseRemainder(next_remainder[1:])
         else error 'Expected a comma before next function parameter, but got %s' % next_remainder
       );
-    local params = parseRemainder(str);
+    local params =
+      if std.startsWith(str, ')')
+      then []
+      else parseRemainder(str);
 
     local remainder =
       if std.length(params) == 0
       then str
       else std.get(std.reverse(params)[0], 'remainder', '');
 
-    if std.length(params) > 0
-    then {
+    {
       type: 'params',
       params: params,
-    } + addRemainder(remainder)
-    else {},
+    } + addRemainder(remainder),
 
   local parseParam(str) =
     local id = parseExpr(str);
@@ -906,11 +984,14 @@ local l = {
       if expr != {}
       then std.get(expr, 'remainder', '')
       else id_remainder;
-    {
+
+    if id != {}
+    then {
       type: 'param',
       id: id,
       [if expr != {} then 'expr']: expr,
-    } + addRemainder(remainder),
+    } + addRemainder(remainder)
+    else {},
 
   local parseAssertionExpr(str) =
     local assertion = parseAssertion(str);
@@ -947,19 +1028,23 @@ local l = {
     } + addRemainder(remainder)
     else {},
 
-  local parseImport(str, type) =
-    local remainder = stripWhitespace(str[std.length(type):]);
-    local parsed = parseExpr(remainder);
+  local parseImport(str) =
+    local type =
+      std.filter(
+        function(t) std.startsWith(str, t),
+        ['importstr', 'importbin', 'import']
+      );
+    local remainder = stripWhitespace(str[std.length(type[0]):]);
+    local parsed = parseString(remainder);
     local path =
-      if parsed.type == 'string'
-      then parsed
-      else error 'Computed imports are not allowed';
-    if std.startsWith(str, type)
-       && path != {}
+      if 'type' in parsed && parsed.type == 'string'
+      then parsed.string
+      else error 'Computed imports are not allowed %s' % std.toString(parsed);
+    if std.length(type) > 0
     then {
-      type: type + '_statement',
-      path: path.string,
-    } + addRemainder(std.get(path, 'remainder', ''))
+      type: type[0] + '_statement',
+      path: path,
+    } + addRemainder(std.get(parsed, 'remainder', ''))
     else {},
 
   local parseErrorExpr(str) =
