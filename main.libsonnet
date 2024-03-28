@@ -20,10 +20,10 @@ local l = {
       else null;
     if stripped != null
     then stripLeadingComments(stripped)
-    else stripWhitespace(s)
-  ,
+    else stripWhitespace(s),
 
-  local stripWhitespace(str) = std.stripChars(str, [' ', '\t', '\n', '\r']),
+  local stripWhitespace(str) =
+    std.stripChars(str, [' ', '\t', '\n', '\r']),
 
   local addRemainder(str) =
     local s = stripLeadingComments(str);
@@ -220,7 +220,6 @@ local l = {
     else if std.startsWith(str, '|||')
     then parseVerbatimString(str)
     else {},
-
 
   local parseQuotedString(str) =
     local isEscaped(str) =
