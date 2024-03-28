@@ -126,27 +126,31 @@ local l = {
         ]
       );
 
-    local found_more =
-      std.filter(
-        function(i) i != {},
-        [
-          parseFieldaccess(found[0]),
-          parseIndexing(found[0]),
-          parseFunctioncall(found[0]),
-          parseBinary(found[0]),
-          parseImplicitPlus(found[0]),
-          parseExprInSuper(found[0], in_object),
-        ]
-      );
-
     if std.length(found) > 1
     then error 'more than 1 expr matched: %s' % std.manifestJson(found)
     else if std.length(found) == 1
-    then
-      if found_more != []
-      then found_more[0]
-      else found[0]
+    then parseExprRemainder(found[0], in_object)
     else {},
+
+  local parseExprRemainder(obj, in_object) =
+    local found =
+      std.filter(
+        function(i) i != {},
+        [
+          parseFieldaccess(obj),
+          parseIndexing(obj),
+          parseFunctioncall(obj),
+          parseBinary(obj),
+          parseImplicitPlus(obj),
+          parseExprInSuper(obj, in_object),
+        ]
+      );
+    if std.length(found) > 1
+    then error 'more than 1 expr matched: %s' % std.manifestJson(found)
+    else if std.length(found) == 1
+    then parseExprRemainder(found[0], in_object)
+    else obj,
+
 
   local parseIdOrLiteral(s, strict=false) =
     local str = stripLeadingComments(s);
@@ -345,16 +349,48 @@ local l = {
           then []
           else if std.startsWith(next_remainder, ',')
           then parseRemainder(stripLeadingComments(member.remainder[1:]))
-          else if std.startsWith(next_remainder, 'for')
-          then error 'object_forloop not implemented'
-          else error 'Expected a comma before next field, but got "%s"' % next_remainder
+          else if std.startsWith(std.trace(next_remainder, next_remainder), 'for')
+          then []
+          else error 'Expected a comma before next field, but got "%s"' % remainder
         );
     local members = parseRemainder(stripLeadingComments(str[1:]));
+
+    local last_member = std.reverse(members)[0];
+
+    local fields = std.filter(function(member) member.type == 'field', members);
+    local asserts = std.filter(function(member) member.type == 'assertion', members);
+    local field =
+      if std.length(asserts) != 0
+      then error 'Object comprehension cannot have asserts'
+      else if std.length(fields) > 1
+      then error 'Object comprehension can only have one field'
+      else fields[0];
+
+    local fieldIndex = std.prune(std.mapWithIndex(function(i, m) if m == field then i else null, members))[0];
+    local left_object_locals = members[:fieldIndex];
+    local right_object_locals = members[fieldIndex + 1:];
+
+    local fieldname =
+      if field.fieldname.type == 'fieldname_expr'
+      then field.fieldname
+      else error 'Object comprehensions can only have [e] fields';
+
+    local forspec =
+      if std.length(members) >= 1
+         && std.startsWith(std.get(last_member, 'remainder', ''), 'for')
+      then parseForspec(std.get(last_member, 'remainder', ''))
+      else {};
+
+    local compspec = parseCompspec(std.get(forspec, 'remainder', ''));
 
     local remainder =
       if std.length(members) == 0
       then str[1:]
-      else std.get(std.reverse(members)[0], 'remainder', '');
+      else if compspec != {}
+      then std.get(compspec, 'remainder', '')
+      else if forspec != {}
+      then std.get(forspec, 'remainder', '')
+      else std.get(last_member, 'remainder', '');
 
     local final_remainder =
       if std.startsWith(remainder, '}')
@@ -365,10 +401,21 @@ local l = {
       else error 'Expected "}" but got "%s"' % remainder;
 
     if std.startsWith(str, '{')
-    then {
-      type: 'object',
-      members: members,
-    } + addRemainder(final_remainder)
+    then
+      if forspec != {}
+      then {
+        type: 'object_forloop',
+        forspec: forspec,
+        [if compspec != {} then 'compspec']: compspec,
+        fieldname_expr: fieldname,
+        expr: field.expr,
+        left_object_locals: left_object_locals,
+        right_object_locals: right_object_locals,
+      }
+      else {
+        type: 'object',
+        members: members,
+      } + addRemainder(final_remainder)
     else {},
 
   local parseMember(str) =
