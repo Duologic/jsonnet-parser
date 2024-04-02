@@ -1,0 +1,705 @@
+local lexer = import './lexer.libsonnet';
+local util = import './util.libsonnet';
+local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
+
+local parser = {
+  new(file): {
+    local this = self,
+    local lexicon = lexer.lex(file),
+
+    local lexMap = {
+      IDENTIFIER: this.parseIdentifier,
+      NUMBER: this.parseNumber,
+      STRING_SINGLE: this.parseString,
+      STRING_DOUBLE: this.parseString,
+      VERBATIM_STRING_SINGLE: this.parseVerbatimString,
+      VERBATIM_STRING_DOUBLE: this.parseVerbatimString,
+      STRING_BLOCK: this.parseTextBlock,
+      OPERATOR: this.parseUnary,
+      SYMBOL: this.parseSymbol,
+    },
+
+    local symbolMap = {
+      '{': this.parseObject,
+      '[': this.parseArray,
+    },
+
+    local symbolRemainderMap = {
+      '.': this.parseFieldaccess,
+      '[': this.parseIndexing,
+      '(': this.parseFunctioncall,
+    },
+
+    parse():
+      local token = lexicon[0];
+      local expr = self.parseExpr();
+      if expr.cursor == std.length(lexicon)
+      then expr
+      else lexicon[expr.cursor:],
+
+    parseExpr(index=0, endTokens=[], in_object=false):
+      local token = lexicon[index];
+      local expr =
+        (if token[0] == 'OPERATOR'
+         then self.parseUnary(index)
+         else if token[1] == 'local'
+         then self.parseLocalBind(index, endTokens)
+         else if token[1] == 'super'
+         then self.parseSuper(index, in_object)
+         else if token[1] == 'if'
+         then self.parseConditional(index, endTokens, in_object)
+         else self.parseLex(index));
+
+      self.parseExprRemainder(expr, endTokens),
+
+    parseExprRemainder(obj, endTokens=[]):
+      if obj.cursor == std.length(lexicon)
+         || std.member(endTokens, lexicon[obj.cursor][1])
+      then obj
+      else
+        local token = lexicon[obj.cursor];
+        local expr =
+          (if token[0] == 'OPERATOR' && std.member(util.binaryoperators, token[1])
+           then self.parseBinary(obj, endTokens)
+           else getParseFunction(
+             symbolRemainderMap,
+             token[1],
+             function(o) error 'Unexpected token: ' + std.toString(lexicon[o.cursor])
+           )(obj));
+        self.parseExprRemainder(expr, endTokens),
+
+    local getParseFunction(map, key, default=function(i) error 'Unexpected token: ' + std.toString(lexicon[i])) =
+      std.get(map, key, default),
+
+    parseLex(index):
+      getParseFunction(lexMap, lexicon[index][0])(index),
+
+    parseSymbol(index):
+      getParseFunction(symbolMap, lexicon[index][1])(index),
+
+    parseIdentifier(index):
+      local token = lexicon[index];
+      local tokenValue = token[1];
+      local literals = {
+        'null': null,
+        'true': true,
+        'false': false,
+        'self': 'self',
+        '$': '$',  // FIXME: is not seen as identifier
+      };
+      if std.member(std.objectFields(literals), tokenValue)
+      then {
+        type: 'literal',
+        literal: literals[tokenValue],
+        cursor:: index + 1,
+      }
+      else {
+        type: 'id',
+        id: tokenValue,
+        cursor:: index + 1,
+      },
+
+    parseNumber(index):
+      local token = lexicon[index];
+      local tokenValue = token[1];
+      {
+        type: 'number',
+        number: tokenValue,
+        cursor:: index + 1,
+      },
+
+    parseString(index):
+      local token = lexicon[index];
+      local tokenValue = token[1];
+      {
+        type: 'string',
+        string: tokenValue[1:std.length(tokenValue) - 1],
+        cursor:: index + 1,
+      },
+
+    parseVerbatimString(index):
+      local token = lexicon[index];
+      local tokenValue = token[1];
+
+      assert
+        token[0] == 'VERBATIM_STRING_SINGLE'
+        || token[0] == 'VERBATIM_STRING_DOUBLE'
+        : 'Expected VERBATIM_STRING_SINGLE or VERBATIM_STRING_DOUBLE but got '
+          + std.toString(token);
+
+      {
+        type: 'string',
+        string: tokenValue[2:std.length(tokenValue) - 1],
+        verbatim: true,
+        cursor:: index + 1,
+      },
+
+    parseTextBlock(index):
+      local token = lexicon[index];
+
+      assert
+        token[0] == 'STRING_BLOCK'
+        : 'Expected STRING_BLOCK but got '
+          + std.toString(token);
+
+      local tokenValue = token[1];
+
+      local lines = std.split(tokenValue[4:std.length(tokenValue) - 4], '\n');
+
+      local spacesOnFirstLine = std.length(lines[0]) - std.length(std.lstripChars(lines[0], ' '));
+
+      local string = std.join('\n', [
+        line[spacesOnFirstLine:]
+        for line in lines
+      ]);
+
+      {
+        type: 'string',
+        string: string,
+        textblock: true,
+        cursor:: index + 1,
+      },
+
+    parseBinary(expr, endTokens=[]):
+      local index = expr.cursor;
+      local left_expr = expr;
+      local binaryop = lexicon[index];
+      assert std.member(util.binaryoperators, binaryop[1]) : 'Not a binary operator: ' + binaryop[1];
+      local right_expr = self.parseExpr(index + 1, endTokens);
+      {
+        type: 'binary',
+        binaryop: binaryop[1],
+        left_expr: left_expr,
+        right_expr: right_expr,
+        cursor:: right_expr.cursor,
+      },
+
+    parseUnary(index):
+      local token = lexicon[index];
+      assert std.member(util.unaryoperators, token[1]) : 'Not a unary operator: ' + token[1];
+      local expr = self.parseExpr(index + 1);
+      {
+        type: 'unary',
+        unaryop: token[1],
+        expr: expr,
+        cursor:: expr.cursor,
+      },
+
+    local parseTokens(index, endTokens, splitToken, parseF) =
+      local split = if std.isArray(splitToken) then splitToken else [splitToken];
+      local infunc(index) =
+        local token = lexicon[index][1];
+        local item = parseF(index);
+        local nextToken = lexicon[item.cursor];
+
+        if std.member(endTokens, token)
+        then []
+        else if std.member(endTokens, nextToken[1])
+        then [item]
+        else if std.member(split, nextToken[1])
+        then [item + { cursor+:: 1 }]
+             + infunc(item.cursor + 1)
+        else error 'Expected %s before next item but got "%s"' % [split, item];
+      infunc(index),
+
+    parseObject(index):
+      local token = lexicon[index];
+
+      assert token[1] == '{' : 'Expected { but got ' + token[1];
+
+      local memberEndtokens = ['}', 'for', 'if'];
+      local members = parseTokens(
+        index + 1,
+        memberEndtokens,
+        ',',
+        function(index)
+          self.parseMember(index, [','] + memberEndtokens)
+      );
+
+      local last = std.reverse(members)[0];
+      local nextCursor =
+        if std.length(members) > 0
+        then last.cursor
+        else index + 1;
+
+      local isForloop = (lexicon[nextCursor][1] == 'for');
+      local forspec = self.parseForspec(nextCursor, ['}', 'for', 'if']);
+
+      local fields = std.filter(function(member) member.type == 'field' || member.type == 'field_function', members);
+      local asserts = std.filter(function(member) member.type == 'assertion', members);
+
+      assert !(isForloop && std.length(asserts) != 0) : 'Object comprehension cannot have asserts';
+      assert !(isForloop && std.length(fields) > 1) : 'Object comprehension can only have one field';
+      assert !(isForloop && fields[0].fieldname.type != 'fieldname_expr') : 'Object comprehension can only have [e] fields';
+
+      local fieldIndex = std.prune(std.mapWithIndex(function(i, m) if m == fields[0] then i else null, members))[0];
+      local left_object_locals = members[:fieldIndex];
+      local right_object_locals = members[fieldIndex + 1:];
+
+      local hasCompspec = std.member(['for', 'if'], lexicon[forspec.cursor][1]);
+      local compspec = self.parseCompspec(forspec.cursor, ['}']);
+
+      local cursor =
+        if isForloop
+        then
+          if hasCompspec
+          then compspec.cursor
+          else forspec.cursor
+        else nextCursor;
+
+      assert lexicon[cursor][1] == '}' : 'Expected } but got ' + lexicon[cursor][1];
+
+      if isForloop
+      then {
+        type: 'object_forloop',
+        forspec: forspec,
+        [if hasCompspec then 'compspec']: compspec,
+        field: fields[0],
+        left_object_locals: left_object_locals,
+        right_object_locals: right_object_locals,
+        cursor:: cursor + 1,
+      }
+      else {
+        type: 'object',
+        members: members,
+        cursor:: cursor + 1,
+      },
+
+    parseArray(index):
+      local token = lexicon[index];
+
+      assert token[1] == '[' : 'Expected [ but got ' + token[1];
+
+      local itemEndtokens = [']', 'for', 'if'];
+      local items = parseTokens(
+        index + 1,
+        itemEndtokens,
+        ',',
+        function(index)
+          self.parseExpr(index, [','] + itemEndtokens)
+      );
+
+      local last = std.reverse(items)[0];
+      local nextCursor =
+        if std.length(items) > 0
+        then last.cursor
+        else index + 1;
+
+      local isForloop = (lexicon[nextCursor][1] == 'for');
+      local forspec = self.parseForspec(nextCursor, [']', 'for', 'if']);
+
+      assert !(isForloop && std.length(items) > 1) : 'Array forloop can only have one expression';
+
+      local hasCompspec = std.member(['for', 'if'], lexicon[forspec.cursor][1]);
+      local compspec = self.parseCompspec(forspec.cursor, [']']);
+
+      local cursor =
+        if isForloop
+        then
+          if hasCompspec
+          then compspec.cursor
+          else forspec.cursor
+        else nextCursor;
+
+      assert lexicon[cursor][1] == ']' : 'Expected ] but got ' + lexicon[cursor][1];
+
+      if isForloop
+      then {
+        type: 'forloop',
+        expr: items[0],
+        forspec: forspec,
+        [if hasCompspec then 'compspec']: compspec,
+        cursor:: cursor + 1,
+      }
+      else {
+        type: 'array',
+        items: items,
+        cursor:: cursor + 1,
+      },
+
+    parseFieldaccess(obj):
+      local token = lexicon[obj.cursor];
+      assert token[1] == '.' : 'Expected "." but got "%s"' % token[1];
+      local id = self.parseIdentifier(obj.cursor + 1);
+      {
+        type: 'fieldaccess',
+        exprs: [obj],
+        id: id,
+        cursor:: id.cursor,
+      },
+
+    parseIndexing(obj):
+      assert lexicon[obj.cursor][1] == '[' : 'Expected [ but got ' + lexicon[obj.cursor][1];
+      local literal(cursor) = {
+        type: 'literal',
+        literal: '',
+        cursor:: cursor,
+      };
+      local f(index) =
+        local token = lexicon[index];
+        local prevToken = lexicon[index - 1];
+        local expr = self.parseExpr(index, [':', '::', ']']);
+        if token[1] == ']'
+        then []
+        else if token[1] == ':' && prevToken[0] != 'OPERATOR'
+        then [literal(index + 1)] + f(index + 1)
+        else if token[1] == '::' && prevToken[0] != 'OPERATOR'
+        then [literal(index + 1), literal(index + 1)] + f(index + 1)
+        else [expr] + f(expr.cursor);
+
+      local exprs = f(obj.cursor + 1);
+
+      assert std.length(exprs) != 0 : 'Indexing requires an expression';
+
+      local last = std.reverse(exprs)[0];
+      local cursor =
+        if std.length(exprs) > 0
+        then last.cursor
+        else obj.cursor + 1;
+
+      assert lexicon[cursor][1] == ']' : 'Expected ] but got ' + lexicon[cursor][1];
+      {
+        type: 'indexing',
+        expr: obj,
+        exprs: exprs,
+        cursor:: cursor + 1,
+      },
+
+    parseSuper(index, in_object):
+      assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
+      local map = {
+        '.': this.parseFieldaccessSuper,
+        '[': this.parseIndexingSuper,
+      };
+
+      map[lexicon[index + 1][1]](index, in_object),
+
+    parseFieldaccessSuper(index, in_object):
+      assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
+      assert lexicon[index + 1][1] == '.' : 'Expected "." but got ' + lexicon[index + 1][1];
+      assert in_object : "Can't use super outside of an object";
+      local id = self.parseIdentifier(index + 2);
+      {
+        type: 'fieldaccess_super',
+        id: id,
+        cursor:: id.cursor,
+      },
+
+    parseIndexingSuper(index, in_object):
+      assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
+      assert lexicon[index + 1][1] == '[' : 'Expected "[" but got ' + lexicon[index + 1][1];
+      assert in_object : "Can't use super outside of an object";
+      local expr = self.parseExpr(index + 2, [']']);
+      assert lexicon[expr.cursor][1] == ']' : 'Expected "]" but got ' + lexicon[expr.cursor][1];
+      {
+        type: 'indexing_super',
+        expr: expr,
+        cursor:: expr.cursor + 1,
+      },
+
+    parseFunctioncall(obj):
+      assert lexicon[obj.cursor][1] == '(' : 'Expected ( but got ' + lexicon[obj.cursor][1];
+
+      local args =
+        parseTokens(
+          obj.cursor + 1,
+          [')'],
+          [','],
+          self.parseArg,
+        );
+
+      local validargs =
+        std.foldl(
+          function(acc, arg)
+            assert !(std.length(acc) > 0
+                     && 'id' in std.reverse(acc)[0]
+                     && !('id' in arg))
+                   : 'Positional argument after a named argument is not allowed';
+            acc + [arg],
+          args,
+          []
+        );
+
+      local last = std.reverse(args)[0];
+      local cursor =
+        if std.length(args) > 0
+        then last.cursor
+        else obj.cursor + 1;
+
+      assert lexicon[cursor][1] == ')' : 'Expected ")" but got "%s"' % lexicon[cursor][1];
+
+      {
+        type: 'functioncall',
+        expr: obj,
+        args: validargs,
+        cursor:: cursor + 1,
+      },
+
+    parseArg(index):
+      local endTokens = [',', ')'];
+      local expr = self.parseExpr(index, endTokens + ['=']);
+      local hasExpr = (lexicon[expr.cursor][1] == '=');
+      local id = self.parseIdentifier(index);
+      local exprValue = self.parseExpr(id.cursor + 1, endTokens);
+      {
+        type: 'arg',
+        expr: expr,
+        cursor:: expr.cursor,
+      }
+      + (if hasExpr
+         then {
+           id: id,
+           expr: exprValue,
+           cursor:: exprValue.cursor,
+         }
+         else {}),
+
+    parseLocalBind(index, endTokens):
+      assert lexicon[index][1] == 'local' : 'Expected local but got ' + lexicon[index][1];
+      local binds =
+        parseTokens(
+          index + 1,
+          [';'],
+          ',',
+          function(index)
+            self.parseBind(index, [',', ';'])
+        );
+      local last = std.reverse(binds)[0];
+      assert lexicon[last.cursor][1] == ';' : 'Expected ; but got ' + lexicon[last.cursor][1];
+      local expr = self.parseExpr(last.cursor + 1, endTokens);
+      {
+        type: 'local_bind',
+        bind: binds[0],
+        expr: expr,
+        [if std.length(binds) > 1 then 'additional_binds']: binds[1:],
+        cursor:: expr.cursor,
+      },
+
+    parseConditional(index, endTokens, in_object):
+      assert lexicon[index][1] == 'if' : 'Expected if but got ' + lexicon[index][1];
+      local ifExpr = self.parseExpr(index + 1, ['then'], in_object);
+
+      assert lexicon[ifExpr.cursor][1] == 'then' : 'Expected then but got ' + lexicon[ifExpr.cursor][1];
+      local thenExpr = self.parseExpr(ifExpr.cursor + 1, ['else'] + endTokens, in_object);
+
+      local hasElseExpr = (lexicon[thenExpr.cursor][1] == 'else');
+      local elseExpr = self.parseExpr(thenExpr.cursor + 1, endTokens, in_object);
+
+      local cursor =
+        if hasElseExpr
+        then elseExpr.cursor
+        else thenExpr.cursor;
+
+      {
+        type: 'conditional',
+        if_expr: ifExpr,
+        then_expr: thenExpr,
+        [if hasElseExpr then 'else_expr']: elseExpr,
+        cursor:: cursor,
+      },
+
+    parseMember(index, endTokens):
+      local token = lexicon[index];
+      if token[1] == 'local'
+      then self.parseObjectLocal(index, endTokens)
+      else if token[1] == 'assert'
+      then self.parseAssertion(index, endTokens, in_object=true)
+      else self.parseField(index, endTokens),
+
+    parseObjectLocal(index, endTokens):
+      local token = lexicon[index];
+      assert token[1] == 'local' : 'Expected "local" but got "%s"' % token[1];
+      local bind = self.parseBind(index + 1, endTokens, in_object=true);
+      {
+        type: 'object_local',
+        bind: bind,
+        cursor:: bind.cursor,
+      },
+
+    parseBind(index, endTokens, in_object=false):
+      local id = self.parseIdentifier(index);
+
+      local isFunction = (lexicon[id.cursor][1] == '(');
+      local params = self.parseParams(id.cursor);
+
+      local nextCursor =
+        if isFunction
+        then params.cursor
+        else id.cursor;
+
+      local operator = lexicon[nextCursor][1];
+      assert operator == '=' : 'Expected token = but got "%s"' % operator;
+
+      local expr = self.parseExpr(nextCursor + 1, endTokens, in_object);
+      {
+        type: 'bind',
+        id: id,
+        expr: expr,
+        cursor:: expr.cursor,
+      }
+      + (if isFunction
+         then {
+           type: 'bind_function',
+           params: params,
+         }
+         else {}),
+
+    parseAssertion(index, endTokens, in_object=false):
+      local token = lexicon[index];
+      assert token[1] == 'assert' : 'Expected "assert" but got "%s"' % token[1];
+      local expr = self.parseExpr(index + 1, [':'] + endTokens, in_object);
+      local return_expr =
+        if lexicon[expr.cursor][1] == ':'
+        then self.parseExpr(expr.cursor + 1, endTokens, in_object)
+        else {};
+      local cursor = std.get(return_expr, 'cursor', expr.cursor);
+      assert std.member(endTokens, lexicon[cursor][1]) : 'Expected %s but got %s' % [std.toString(endTokens), lexicon[cursor][1]];
+      {
+        type: 'assertion',
+        expr: expr,
+        [if return_expr != {} then 'return_expr']: return_expr,
+        cursor:: cursor,
+      },
+
+    parseField(index, endTokens):
+      local fieldname = self.parseFieldname(index);
+
+      local isFunction = (lexicon[fieldname.cursor][1] == '(');
+      local params = self.parseParams(fieldname.cursor);
+
+      local nextCursor =
+        if isFunction
+        then params.cursor
+        else fieldname.cursor;
+
+      local operator = lexicon[nextCursor][1];
+      local expectOp = [':', '::', ':::', '+:', '+::', '+:::'];
+      assert std.member(expectOp, operator) : 'Expected token %s but got "%s"' % [std.join('","', expectOp), operator];
+
+      local expr = self.parseExpr(nextCursor + 1, endTokens, true);
+      {
+        type: 'field',
+        fieldname: fieldname,
+        h: operator,
+        expr: expr,
+        cursor:: expr.cursor,
+      }
+      + (if isFunction
+         then {
+           type: 'field_function',
+           params: params,
+         }
+         else {}),
+
+    parseFieldname(index):
+      local token = lexicon[index];
+      if token[1] == '['
+      then self.parseFieldnameExpr(index)
+      else lexMap[token[0]](index),
+
+    parseFieldnameExpr(index):
+      local token = lexicon[index];
+      assert token[1] == '[' : 'Expected "[" but got "%s"' % token[1];
+      local expr = self.parseExpr(index + 1, endTokens=[']']);
+      assert lexicon[expr.cursor][1] == ']' : 'Expected "]" but got "%s"' % lexicon[expr.cursor][1];
+      {
+        type: 'fieldname_expr',
+        expr: expr,
+        cursor:: expr.cursor + 1,
+      },
+
+    parseParams(index):
+      local token = lexicon[index];
+
+      assert token[1] == '(' : 'Expected ( but got ' + token[1];
+
+      local params = parseTokens(index + 1, [')'], ',', self.parseParam);
+
+      local last = std.reverse(params)[0];
+      local cursor =
+        if std.length(params) > 0
+        then last.cursor
+        else index + 1;
+
+      assert lexicon[cursor][1] == ')' : 'Expected ) but got ' + lexicon[cursor][1];
+      {
+        type: 'params',
+        params: params,
+        cursor:: cursor + 1,
+      },
+
+    parseParam(index):
+      local endTokens = [',', ')'];
+      local id = self.parseExpr(index, endTokens + ['=']);
+      local hasExpr = lexicon[id.cursor][1] == '=';
+      local expr = self.parseExpr(id.cursor + 1, endTokens);
+      local cursor =
+        if hasExpr
+        then expr.cursor
+        else id.cursor;
+      {
+        type: 'param',
+        id: id,
+        [if hasExpr then 'expr']: expr,
+        cursor:: cursor,
+      },
+
+    parseForspec(index, endTokens):
+      local token = lexicon[index];
+      assert token[1] == 'for' : 'Expected "for" but got "%s"' % token[1];
+
+      local id = self.parseIdentifier(index + 1);
+
+      assert lexicon[id.cursor][1] == 'in' : 'Expected "in" but got "%s"' % lexicon[id.cursor][1];
+
+      local expr = self.parseExpr(id.cursor + 1, endTokens);
+
+      {
+        type: 'forspec',
+        id: id,
+        expr: expr,
+        cursor:: expr.cursor,
+      },
+
+    parseIfspec(index, endTokens):
+      local token = lexicon[index];
+      assert token[1] == 'if' : 'Expected "if" but got "%s"' % token[1];
+
+      local expr = self.parseExpr(index + 1, endTokens);
+      {
+        type: 'ifspec',
+        expr: expr,
+        cursor:: expr.cursor,
+      },
+
+    parseCompspec(index, endTokens):
+      local compMap = {
+        'if': this.parseIfspec,
+        'for': this.parseForspec,
+      };
+      local items =
+        parseTokens(
+          // Doing funky index juggling because parseTokens moves index past splitToken
+          index + 1,
+          endTokens,
+          ['for', 'if'],
+          function(index)
+            local token = lexicon[index - 1];
+            if std.member(endTokens, token[1])
+            then { cursor: index }
+            else
+              assert std.member(['for', 'if'], token[1]) : 'Expected "for" or "if" but got "%s"' % std.toString(token);
+              compMap[token[1]](index - 1, endTokens + ['for', 'if'])
+        );
+      local last = std.reverse(items)[0];
+      {
+        type: 'compspec',
+        items: items,
+        cursor:: last.cursor,
+      },
+  },
+};
+
+local file = importstr './test/test1.jsonnet';
+parser.new(file).parse()
+//lexer.lex(file)
