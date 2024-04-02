@@ -99,10 +99,11 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
     [tokenName[startChar], startChar + value + startChar],
 
+  // FIXME: this doesn't work correctly, issue probably in xtd.string.splitEscape function
   lexVerbatimString(str):
     assert str[0] == '@' : 'Expected "@" but got "%s"' % str[0];
 
-    local q = self.lexQuotedString(str[1:], str[1]);
+    local q = self.lexQuotedString(str[1:], str[1] + str[1]);
 
     ['VERBATIM_' + q[0], '@' + q[1]],
 
@@ -132,7 +133,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     local string = std.join('\n', stringlines);
     local ending = std.lstripChars(lines[1 + std.length(stringlines)], ' ');
 
-    assert ending == marker : 'text block not terminated with ||| ---%s' % std.manifestJson(ending);
+    assert ending[:3] == marker : 'text block not terminated with ||| ---%s' % std.manifestJson(ending);
 
     ['STRING_BLOCK', std.join('\n', [marker, string, marker])],
 

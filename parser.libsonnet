@@ -28,6 +28,7 @@ local parser = {
       '.': this.parseFieldaccess,
       '[': this.parseIndexing,
       '(': this.parseFunctioncall,
+      '{': this.parseImplicitPlus,
     },
 
     parse():
@@ -37,7 +38,7 @@ local parser = {
       then expr
       else lexicon[expr.cursor:],
 
-    parseExpr(index=0, endTokens=[], in_object=false):
+    parseExpr(index=0, endTokens=[], inObject=false):
       local token = lexicon[index];
       local expr =
         (if token[0] == 'OPERATOR'
@@ -45,14 +46,20 @@ local parser = {
          else if token[1] == 'local'
          then self.parseLocalBind(index, endTokens)
          else if token[1] == 'super'
-         then self.parseSuper(index, in_object)
+         then self.parseSuper(index, inObject)
          else if token[1] == 'if'
-         then self.parseConditional(index, endTokens, in_object)
+         then self.parseConditional(index, endTokens, inObject)
+         else if token[1] == 'function'
+         then self.parseAnonymousFunction(index, endTokens, inObject)
+         else if token[1] == 'assert'
+         then self.parseAssertionExpr(index, endTokens, inObject)
+         else if std.member(['importstr', 'importbin', 'import'], token[1])
+         then self.parseImport(index)
          else self.parseLex(index));
 
       self.parseExprRemainder(expr, endTokens),
 
-    parseExprRemainder(obj, endTokens=[]):
+    parseExprRemainder(obj, endTokens):
       if obj.cursor == std.length(lexicon)
          || std.member(endTokens, lexicon[obj.cursor][1])
       then obj
@@ -162,16 +169,16 @@ local parser = {
 
     parseBinary(expr, endTokens=[]):
       local index = expr.cursor;
-      local left_expr = expr;
+      local leftExpr = expr;
       local binaryop = lexicon[index];
       assert std.member(util.binaryoperators, binaryop[1]) : 'Not a binary operator: ' + binaryop[1];
-      local right_expr = self.parseExpr(index + 1, endTokens);
+      local rightExpr = self.parseExpr(index + 1, endTokens);
       {
         type: 'binary',
         binaryop: binaryop[1],
-        left_expr: left_expr,
-        right_expr: right_expr,
-        cursor:: right_expr.cursor,
+        left_expr: leftExpr,
+        right_expr: rightExpr,
+        cursor:: rightExpr.cursor,
       },
 
     parseUnary(index):
@@ -233,8 +240,8 @@ local parser = {
       assert !(isForloop && fields[0].fieldname.type != 'fieldname_expr') : 'Object comprehension can only have [e] fields';
 
       local fieldIndex = std.prune(std.mapWithIndex(function(i, m) if m == fields[0] then i else null, members))[0];
-      local left_object_locals = members[:fieldIndex];
-      local right_object_locals = members[fieldIndex + 1:];
+      local leftObjectLocals = members[:fieldIndex];
+      local rightObjectLocals = members[fieldIndex + 1:];
 
       local hasCompspec = std.member(['for', 'if'], lexicon[forspec.cursor][1]);
       local compspec = self.parseCompspec(forspec.cursor, ['}']);
@@ -255,8 +262,8 @@ local parser = {
         forspec: forspec,
         [if hasCompspec then 'compspec']: compspec,
         field: fields[0],
-        left_object_locals: left_object_locals,
-        right_object_locals: right_object_locals,
+        [if std.length(leftObjectLocals) > 0 then 'left_object_locals']: leftObjectLocals,
+        [if std.length(rightObjectLocals) > 0 then 'right_object_locals']: rightObjectLocals,
         cursor:: cursor + 1,
       }
       else {
@@ -365,19 +372,19 @@ local parser = {
         cursor:: cursor + 1,
       },
 
-    parseSuper(index, in_object):
+    parseSuper(index, inObject):
       assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
       local map = {
         '.': this.parseFieldaccessSuper,
         '[': this.parseIndexingSuper,
       };
 
-      map[lexicon[index + 1][1]](index, in_object),
+      map[lexicon[index + 1][1]](index, inObject),
 
-    parseFieldaccessSuper(index, in_object):
+    parseFieldaccessSuper(index, inObject):
       assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
       assert lexicon[index + 1][1] == '.' : 'Expected "." but got ' + lexicon[index + 1][1];
-      assert in_object : "Can't use super outside of an object";
+      assert inObject : "Can't use super outside of an object";
       local id = self.parseIdentifier(index + 2);
       {
         type: 'fieldaccess_super',
@@ -385,10 +392,10 @@ local parser = {
         cursor:: id.cursor,
       },
 
-    parseIndexingSuper(index, in_object):
+    parseIndexingSuper(index, inObject):
       assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
       assert lexicon[index + 1][1] == '[' : 'Expected "[" but got ' + lexicon[index + 1][1];
-      assert in_object : "Can't use super outside of an object";
+      assert inObject : "Can't use super outside of an object";
       local expr = self.parseExpr(index + 2, [']']);
       assert lexicon[expr.cursor][1] == ']' : 'Expected "]" but got ' + lexicon[expr.cursor][1];
       {
@@ -475,15 +482,15 @@ local parser = {
         cursor:: expr.cursor,
       },
 
-    parseConditional(index, endTokens, in_object):
+    parseConditional(index, endTokens, inObject):
       assert lexicon[index][1] == 'if' : 'Expected if but got ' + lexicon[index][1];
-      local ifExpr = self.parseExpr(index + 1, ['then'], in_object);
+      local ifExpr = self.parseExpr(index + 1, ['then'], inObject);
 
       assert lexicon[ifExpr.cursor][1] == 'then' : 'Expected then but got ' + lexicon[ifExpr.cursor][1];
-      local thenExpr = self.parseExpr(ifExpr.cursor + 1, ['else'] + endTokens, in_object);
+      local thenExpr = self.parseExpr(ifExpr.cursor + 1, ['else'] + endTokens, inObject);
 
       local hasElseExpr = (lexicon[thenExpr.cursor][1] == 'else');
-      local elseExpr = self.parseExpr(thenExpr.cursor + 1, endTokens, in_object);
+      local elseExpr = self.parseExpr(thenExpr.cursor + 1, endTokens, inObject);
 
       local cursor =
         if hasElseExpr
@@ -498,25 +505,79 @@ local parser = {
         cursor:: cursor,
       },
 
+    parseImplicitPlus(obj):
+      local object = self.parseObject(obj.cursor);
+      {
+        type: 'implicit_plus',
+        expr: obj,
+        object: object,
+        cursor:: object.cursor,
+      },
+
+    parseAnonymousFunction(index, endTokens, inObject):
+      assert lexicon[index][1] == 'function' : 'Expected "function" but got "%s"' % lexicon[index][1];
+      local params = self.parseParams(index + 1);
+      local expr = self.parseExpr(params.cursor, endTokens, inObject);
+      {
+        type: 'anonymous_function',
+        params: params,
+        expr: expr,
+        cursor:: expr.cursor,
+      },
+
+    parseAssertionExpr(index, endTokens, inObject):
+      local assertion = self.parseAssertion(index, [';'], inObject);
+      assert lexicon[assertion.cursor][1] == ';' : 'Expected ; but got ' + lexicon[assertion.cursor][1];
+      local expr = self.parseExpr(assertion.cursor + 1, endTokens, inObject);
+      {
+        type: 'assertion_expr',
+        assertion: assertion,
+        expr: expr,
+        cursor:: expr.cursor,
+      },
+
+    parseImport(index):
+      local token = lexicon[index];
+      local possibleValues = ['importstr', 'importbin', 'import'];
+
+      assert std.member(['importstr', 'importbin', 'import'], token[1]) : 'Expected %s but got %s' % [possibleValues, token[1]];
+
+      local map = {
+        STRING_SINGLE: this.parseString,
+        STRING_DOUBLE: this.parseString,
+        VERBATIM_STRING_SINGLE: this.parseVerbatimString,
+        VERBATIM_STRING_DOUBLE: this.parseVerbatimString,
+      };
+
+      assert !std.startsWith(lexicon[index + 1][0], 'STRING_BLOCK') : 'Block string literal not allowed for imports';
+      local parsePath = getParseFunction(map, lexicon[index + 1][0]);
+      local path = parsePath(index + 1);
+
+      {
+        type: token[1] + '_statement',
+        path: path,
+        cursor:: path.cursor,
+      },
+
     parseMember(index, endTokens):
       local token = lexicon[index];
       if token[1] == 'local'
       then self.parseObjectLocal(index, endTokens)
       else if token[1] == 'assert'
-      then self.parseAssertion(index, endTokens, in_object=true)
+      then self.parseAssertion(index, endTokens, inObject=true)
       else self.parseField(index, endTokens),
 
     parseObjectLocal(index, endTokens):
       local token = lexicon[index];
       assert token[1] == 'local' : 'Expected "local" but got "%s"' % token[1];
-      local bind = self.parseBind(index + 1, endTokens, in_object=true);
+      local bind = self.parseBind(index + 1, endTokens, inObject=true);
       {
         type: 'object_local',
         bind: bind,
         cursor:: bind.cursor,
       },
 
-    parseBind(index, endTokens, in_object=false):
+    parseBind(index, endTokens, inObject=false):
       local id = self.parseIdentifier(index);
 
       local isFunction = (lexicon[id.cursor][1] == '(');
@@ -530,7 +591,7 @@ local parser = {
       local operator = lexicon[nextCursor][1];
       assert operator == '=' : 'Expected token = but got "%s"' % operator;
 
-      local expr = self.parseExpr(nextCursor + 1, endTokens, in_object);
+      local expr = self.parseExpr(nextCursor + 1, endTokens, inObject);
       {
         type: 'bind',
         id: id,
@@ -544,20 +605,23 @@ local parser = {
          }
          else {}),
 
-    parseAssertion(index, endTokens, in_object=false):
-      local token = lexicon[index];
-      assert token[1] == 'assert' : 'Expected "assert" but got "%s"' % token[1];
-      local expr = self.parseExpr(index + 1, [':'] + endTokens, in_object);
-      local return_expr =
-        if lexicon[expr.cursor][1] == ':'
-        then self.parseExpr(expr.cursor + 1, endTokens, in_object)
-        else {};
-      local cursor = std.get(return_expr, 'cursor', expr.cursor);
+    parseAssertion(index, endTokens, inObject=false):
+      assert lexicon[index][1] == 'assert' : 'Expected "assert" but got "%s"' % lexicon[index][1];
+      local expr = self.parseExpr(index + 1, [':'] + endTokens, inObject);
+
+      local hasReturnExpr = lexicon[expr.cursor][1] == ':';
+      local returnExpr = self.parseExpr(expr.cursor + 1, endTokens, inObject);
+
+      local cursor =
+        if hasReturnExpr
+        then returnExpr.cursor
+        else expr.cursor;
+
       assert std.member(endTokens, lexicon[cursor][1]) : 'Expected %s but got %s' % [std.toString(endTokens), lexicon[cursor][1]];
       {
         type: 'assertion',
         expr: expr,
-        [if return_expr != {} then 'return_expr']: return_expr,
+        [if hasReturnExpr then 'return_expr']: returnExpr,
         cursor:: cursor,
       },
 
