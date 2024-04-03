@@ -151,13 +151,13 @@ local parser = {
 
       local tokenValue = token[1];
 
-      local lines = std.split(tokenValue[4:std.length(tokenValue) - 4], '\n');
+      local lines = std.split(tokenValue, '\n');
 
-      local spacesOnFirstLine = std.length(lines[0]) - std.length(std.lstripChars(lines[0], ' '));
+      local spacesOnFirstLine = std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' '));
 
       local string = std.join('\n', [
         line[spacesOnFirstLine:]
-        for line in lines
+        for line in lines[1:std.length(lines) - 1]
       ]);
 
       {

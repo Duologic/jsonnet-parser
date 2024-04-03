@@ -131,11 +131,13 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       ).lines;
 
     local string = std.join('\n', stringlines);
-    local ending = std.lstripChars(lines[1 + std.length(stringlines)], ' ');
+    local endmarkerIndex = std.findSubstr(marker, lines[1 + std.length(stringlines)])[0];
+    local endmarker = lines[1 + std.length(stringlines)][:endmarkerIndex + 3];
+    local ending = std.lstripChars(endmarker, ' ');
 
-    assert ending[:3] == marker : 'text block not terminated with ||| ---%s' % std.manifestJson(ending);
+    assert ending == marker : 'text block not terminated with ||| ---%s' % std.manifestJson(endmarkerIndex);
 
-    ['STRING_BLOCK', std.join('\n', [marker, string, marker])],
+    ['STRING_BLOCK', std.join('\n', [marker, string, endmarker])],
 
   lexSymbol(str):
     local symbols = ['{', '}', '[', ']', ',', '.', '(', ')', ';'];
@@ -155,7 +157,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     then ['OPERATOR', q]
     else [],
 
-  lex(s):
+  lex(s, prevEndLineNr=0, prevColumnNr=1):
     local str = util.stripLeadingComments(s);
     local lexicons = std.filter(
       function(l) l != [], [
@@ -166,13 +168,37 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
         self.lexOperator(str),
       ]
     );
+    local value = lexicons[0][1];
     assert std.length(lexicons) == 1 : 'Cannot lex: "%s"' % str;
-    assert lexicons[0][1] != '' : 'Cannot lex: "%s"' % str;
-    lexicons
+    assert value != '' : 'Cannot lex: "%s"' % str;
+
+    local countNewlines(s) = std.length(std.findSubstr('\n', s));
+    local removedNewlinesCount = countNewlines(s) - countNewlines(str);
+    local newlinesInLexicon = countNewlines(value);
+
+    local endLineNr =
+      prevEndLineNr
+      + removedNewlinesCount
+      + countNewlines(str[:std.length(value)]);
+    local lineNr = endLineNr - newlinesInLexicon;
+
+    local startColumnNr =
+      if lineNr > prevEndLineNr
+      then 1
+      else prevColumnNr;
+    local leadingSpacesCount = std.length(std.lstripChars(s, '\n')) - std.length(std.lstripChars(s, ' \n'));
+
+    local columnNr = startColumnNr + leadingSpacesCount;
+    local endColumnNr =
+      if newlinesInLexicon == 0
+      then columnNr + std.length(value)
+      else columnNr;
+
+    [lexicons[0] + [{ line: lineNr, column: columnNr }]]
     + (
       local remainder = str[std.length(lexicons[0][1]):];
       if std.length(lexicons) > 0 && remainder != ''
-      then self.lex(remainder)
+      then self.lex(remainder, endLineNr, endColumnNr)
       else []
     ),
 }
