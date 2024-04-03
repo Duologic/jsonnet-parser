@@ -1,8 +1,38 @@
-local util = import './util.libsonnet';
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
+local isNumber(c) =
+  xtd.ascii.isNumber(c);
+
+local isValidIdChar(c) =
+  (xtd.ascii.isLower(c)
+   || xtd.ascii.isUpper(c)
+   || xtd.ascii.isNumber(c)
+   || c == '_');
+
+local stripWhitespace(str) =
+  std.stripChars(str, [' ', '\t', '\n', '\r']);
+
+local stripLeadingComments(s) =
+  local str = stripWhitespace(s);
+  local findIndex(t, s) =
+    local f = std.findSubstr(t, s);
+    if std.length(f) > 0
+    then f[0]
+    else std.length(s);
+  local stripped =
+    if std.startsWith(str, '//')
+    then str[findIndex('\n', str):]
+    else if std.startsWith(str, '#')
+    then str[findIndex('\n', str):]
+    else if std.startsWith(str, '/*')
+    then str[findIndex('*/', str) + 2:]
+    else null;
+  if stripped != null
+  then stripLeadingComments(stripped)
+  else str;
+
 {
-  local keywords = [
+  keywords: [
     'assert',
     'error',
 
@@ -24,14 +54,14 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
   lexIdentifier(str):
     local value =
-      if xtd.ascii.isNumber(str[0])
+      if isNumber(str[0])
       then ''
       else
         std.foldl(
           function(acc, c)
             if acc.break
             then acc
-            else if util.isValidIdChar(c)
+            else if isValidIdChar(c)
             then acc + { value+: c }
             else acc + { break: true },
           std.stringChars(str),
@@ -39,7 +69,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
         ).value;
     if value == 'in'
     then ['OPERATOR', value]
-    else if std.member(keywords, value)
+    else if std.member(self.keywords, value)
     then ['KEYWORD', value]
     else if value != ''
     then ['IDENTIFIER', value]
@@ -47,14 +77,14 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
   lexNumber(str):
     local value =
-      if !xtd.ascii.isNumber(str[0])
+      if !isNumber(str[0])
       then ''
       else
         std.foldl(
           function(acc, c)
             if acc.break
             then acc
-            else if xtd.ascii.isNumber(c)
+            else if isNumber(c)
             then acc + { value+: c }
             else if acc.hasDecimalPoint
             then error "Couldn't lex number , junk after decimal point"
@@ -78,41 +108,62 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     then self.lexQuotedString(str)
     else if std.startsWith(str, '@')
     then self.lexVerbatimString(str)
-    else if std.startsWith(str, '|||')
+    else if std.startsWith(str, '|||\n')
     then self.lexTextBlock(str)
     else [],
 
-  lexQuotedString(str, escapeChar='\\'):
-    assert std.member(['"', "'"], str[0]) : @'Expected '' or " but got %s' % str[0];
+  lexQuotedString(str):
+    assert std.member(['"', "'"], str[0]) : 'Expected \' or " but got %s' % str[0];
 
     local startChar = str[0];
-    local split = xtd.string.splitEscape(str[1:], startChar, escapeChar);
-    local value = split[0];
-    local endChar = str[std.length(startChar) + std.length(value)][:std.length(startChar)];
 
-    assert endChar == startChar : 'Unterminated String';
+    local findLastChar = std.map(function(i) i + 1, std.findSubstr(startChar, str[1:]));
+
+    local isEscaped(index) =
+      index > 1
+      && str[index - 1] == '\\'
+      && !isEscaped(index - 1);
+
+    local lastCharIndices = std.filter(function(e) !isEscaped(e), findLastChar);
+
+    assert std.length(lastCharIndices) > 0 : 'Unterminated String';
+
+    local value = str[1:lastCharIndices[0]];
+    local lastChar = str[lastCharIndices[0]];
 
     local tokenName = {
       '"': 'STRING_DOUBLE',
       "'": 'STRING_SINGLE',
     };
 
-    [tokenName[startChar], startChar + value + startChar],
+    [tokenName[startChar], startChar + value + lastChar],
 
-  // FIXME: this doesn't work correctly, issue probably in xtd.string.splitEscape function
   lexVerbatimString(str):
     assert str[0] == '@' : 'Expected "@" but got "%s"' % str[0];
 
-    local q = self.lexQuotedString(str[1:], str[1] + str[1]);
+    local startChar = str[1];
+    assert std.member(['"', "'"], startChar) : 'Expected \' or " but got %s' % startChar;
 
-    ['VERBATIM_' + q[0], '@' + q[1]],
+    local sub = std.strReplace(str[2:], startChar + startChar, std.char(7));  // replace with BEL character to avoid matching
+    local lastCharIndices = std.map(function(i) i + 3, std.findSubstr(startChar, sub));
+
+    assert std.length(lastCharIndices) > 0 : 'Unterminated String';
+
+    local value = str[1:lastCharIndices[0]];
+    local lastChar = str[lastCharIndices[0]];
+
+    local tokenName = {
+      '"': 'VERBATIM_STRING_DOUBLE',
+      "'": 'VERBATIM_STRING_SINGLE',
+    };
+    [tokenName[startChar], '@' + startChar + value + lastChar],
 
   lexTextBlock(str):
     local lines = std.split(str, '\n');
 
     local marker = '|||';
 
-    assert lines[0] == marker : 'Expected "%s" but got "%s"' % [marker, str[:3]];
+    assert lines[0] == marker : 'Expected "%s" but got "%s"' % [marker, lines[0]];
 
     local spacesOnFirstLine = lines[1][:std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' '))];
 
@@ -157,48 +208,51 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     then ['OPERATOR', q]
     else [],
 
-  lex(s, prevEndLineNr=0, prevColumnNr=1):
-    local str = util.stripLeadingComments(s);
-    local lexicons = std.filter(
-      function(l) l != [], [
-        self.lexString(str),
-        self.lexIdentifier(str),
-        self.lexNumber(str),
-        self.lexSymbol(str),
-        self.lexOperator(str),
-      ]
-    );
-    local value = lexicons[0][1];
-    assert std.length(lexicons) == 1 : 'Cannot lex: "%s"' % str;
-    assert value != '' : 'Cannot lex: "%s"' % str;
+  lex(s, prevEndLineNr=0, prevColumnNr=1, prev=[]):
+    local str = stripLeadingComments(s);
+    if str == ''
+    then []
+    else
+      local lexicons = std.filter(
+        function(l) l != [], [
+          self.lexString(str),
+          self.lexIdentifier(str),
+          self.lexNumber(str),
+          self.lexSymbol(str),
+          self.lexOperator(str),
+        ]
+      );
+      local value = lexicons[0][1];
+      assert std.length(lexicons) == 1 : 'Cannot lex: "%s"' % std.manifestJson(prev);
+      assert value != '' : 'Cannot lex: "%s"' % str;
 
-    local countNewlines(s) = std.length(std.findSubstr('\n', s));
-    local removedNewlinesCount = countNewlines(s) - countNewlines(str);
-    local newlinesInLexicon = countNewlines(value);
+      local countNewlines(s) = std.length(std.findSubstr('\n', s));
+      local removedNewlinesCount = countNewlines(s) - countNewlines(str);
+      local newlinesInLexicon = countNewlines(value);
 
-    local endLineNr =
-      prevEndLineNr
-      + removedNewlinesCount
-      + countNewlines(str[:std.length(value)]);
-    local lineNr = endLineNr - newlinesInLexicon;
+      local endLineNr =
+        prevEndLineNr
+        + removedNewlinesCount
+        + countNewlines(str[:std.length(value)]);
+      local lineNr = endLineNr - newlinesInLexicon;
 
-    local startColumnNr =
-      if lineNr > prevEndLineNr
-      then 1
-      else prevColumnNr;
-    local leadingSpacesCount = std.length(std.lstripChars(s, '\n')) - std.length(std.lstripChars(s, ' \n'));
+      local startColumnNr =
+        if lineNr > prevEndLineNr
+        then 1
+        else prevColumnNr;
+      local leadingSpacesCount = std.length(std.lstripChars(s, '\n')) - std.length(std.lstripChars(s, ' \n'));
 
-    local columnNr = startColumnNr + leadingSpacesCount;
-    local endColumnNr =
-      if newlinesInLexicon == 0
-      then columnNr + std.length(value)
-      else columnNr;
+      local columnNr = startColumnNr + leadingSpacesCount;
+      local endColumnNr =
+        if newlinesInLexicon == 0
+        then columnNr + std.length(value)
+        else columnNr;
 
-    [lexicons[0] + [{ line: lineNr, column: columnNr }]]
-    + (
-      local remainder = str[std.length(lexicons[0][1]):];
-      if std.length(lexicons) > 0 && remainder != ''
-      then self.lex(remainder, endLineNr, endColumnNr)
-      else []
-    ),
+      [lexicons[0] + [{ line: lineNr, column: columnNr }]]
+      + (
+        local remainder = str[std.length(lexicons[0][1]):];
+        if std.length(lexicons) > 0 && remainder != ''
+        then self.lex(remainder, endLineNr, endColumnNr, prev + lexicons)
+        else []
+      ),
 }

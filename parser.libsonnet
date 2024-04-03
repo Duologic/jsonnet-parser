@@ -1,8 +1,6 @@
 local lexer = import './lexer.libsonnet';
-local util = import './util.libsonnet';
-local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
-local parser = {
+{
   new(file): {
     local this = self,
     local lexicon = lexer.lex(file),
@@ -22,6 +20,7 @@ local parser = {
     local symbolMap = {
       '{': this.parseObject,
       '[': this.parseArray,
+      '(': this.parseParenthesis,
     },
 
     local symbolRemainderMap = {
@@ -42,7 +41,7 @@ local parser = {
       local token = lexicon[index];
       local expr =
         (if token[0] == 'OPERATOR'
-         then self.parseUnary(index)
+         then self.parseUnary(index, endTokens, inObject)
          else if token[1] == 'local'
          then self.parseLocalBind(index, endTokens)
          else if token[1] == 'super'
@@ -55,25 +54,29 @@ local parser = {
          then self.parseAssertionExpr(index, endTokens, inObject)
          else if std.member(['importstr', 'importbin', 'import'], token[1])
          then self.parseImport(index)
+         else if token[1] == 'error'
+         then self.parseErrorExpr(index, endTokens, inObject)
          else self.parseLex(index));
 
-      self.parseExprRemainder(expr, endTokens),
+      self.parseExprRemainder(expr, endTokens, inObject),
 
-    parseExprRemainder(obj, endTokens):
+    parseExprRemainder(obj, endTokens, inObject):
       if obj.cursor == std.length(lexicon)
          || std.member(endTokens, lexicon[obj.cursor][1])
       then obj
       else
         local token = lexicon[obj.cursor];
         local expr =
-          (if token[0] == 'OPERATOR' && std.member(util.binaryoperators, token[1])
+          (if lexicon[obj.cursor][1] == 'in' && lexicon[obj.cursor + 1][1] == 'super'
+           then self.parseExprInSuper(obj, inObject)
+           else if token[0] == 'OPERATOR' && std.member(binaryoperators, token[1])
            then self.parseBinary(obj, endTokens)
            else getParseFunction(
              symbolRemainderMap,
              token[1],
              function(o) error 'Unexpected token: ' + std.toString(lexicon[o.cursor])
            )(obj));
-        self.parseExprRemainder(expr, endTokens),
+        self.parseExprRemainder(expr, endTokens, inObject),
 
     local getParseFunction(map, key, default=function(i) error 'Unexpected token: ' + std.toString(lexicon[i])) =
       std.get(map, key, default),
@@ -167,11 +170,33 @@ local parser = {
         cursor:: index + 1,
       },
 
+    local binaryoperators = [
+      '*',
+      '/',
+      '%',
+      '+',
+      '-',
+      '<<',
+      '>>',
+      '<',
+      '<=',
+      '>',
+      '>=',
+      '==',
+      '!=',
+      'in',
+      '&',
+      '^',
+      '|',
+      '&&',
+      '||',
+    ],
+
     parseBinary(expr, endTokens=[]):
       local index = expr.cursor;
       local leftExpr = expr;
       local binaryop = lexicon[index];
-      assert std.member(util.binaryoperators, binaryop[1]) : 'Not a binary operator: ' + binaryop[1];
+      assert std.member(binaryoperators, binaryop[1]) : 'Not a binary operator: ' + binaryop[1];
       local rightExpr = self.parseExpr(index + 1, endTokens);
       {
         type: 'binary',
@@ -181,10 +206,16 @@ local parser = {
         cursor:: rightExpr.cursor,
       },
 
-    parseUnary(index):
+    parseUnary(index, endTokens, inObject):
       local token = lexicon[index];
-      assert std.member(util.unaryoperators, token[1]) : 'Not a unary operator: ' + token[1];
-      local expr = self.parseExpr(index + 1);
+      local unaryoperators = [
+        '-',
+        '+',
+        '!',
+        '~',
+      ];
+      assert std.member(unaryoperators, token[1]) : 'Not a unary operator: ' + token[1];
+      local expr = self.parseExpr(index + 1, endTokens, inObject);
       {
         type: 'unary',
         unaryop: token[1],
@@ -559,6 +590,36 @@ local parser = {
         cursor:: path.cursor,
       },
 
+    parseErrorExpr(index, endTokens, inObject):
+      assert lexicon[index][1] == 'error' : 'Expected "error" but got "%s"' % lexicon[index][1];
+      local expr = self.parseExpr(index + 1, endTokens, inObject);
+      {
+        type: 'error_expr',
+        expr: expr,
+        cursor:: expr.cursor,
+      },
+
+    parseExprInSuper(obj, inObject):
+      assert inObject : "Can't use super outside of an object";
+      assert lexicon[obj.cursor][1] == 'in'
+             && lexicon[obj.cursor + 1][1] == 'super'
+             : 'Expected "in super" but got "%s"' % lexicon[obj.cursor][1] + ' ' + lexicon[obj.cursor + 2][1];
+      {
+        type: 'expr_in_super',
+        expr: obj,
+        cursor:: obj.cursor + 2,
+      },
+
+    parseParenthesis(index):
+      assert lexicon[index][1] == '(' : 'Expected "(" but got "%s"' % lexicon[index][1];
+      local expr = self.parseExpr(index + 1, [')']);
+      assert lexicon[expr.cursor][1] == ')' : 'Expected ")" but got "%s"' % lexicon[expr.cursor][1];
+      {
+        type: 'parenthesis',
+        expr: expr,
+        cursor:: expr.cursor + 1,
+      },
+
     parseMember(index, endTokens):
       local token = lexicon[index];
       if token[1] == 'local'
@@ -762,8 +823,4 @@ local parser = {
         cursor:: last.cursor,
       },
   },
-};
-
-local file = importstr './test/test1.jsonnet';
-parser.new(file).parse()
-//lexer.lex(file)
+}

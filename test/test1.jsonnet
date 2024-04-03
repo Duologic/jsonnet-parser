@@ -10,7 +10,7 @@ local file1 = import './test1.jsonnet';
 {
   local textblock = |||
     d
-  |||
+  |||,
 }
 + {
   id_fieldname: 'stringValue',
@@ -44,12 +44,12 @@ local file1 = import './test1.jsonnet';
   j: self.someFunction(a='a'),
 }
 + {
-  local a = false,
+  local a = (false),
   local b = false,
   [a]: a,
-  local c = false,
+  local c = error 'someError',
   local d = false,
-  local e = false
+  local e = 'j' in super
   for a in ['a']
   if a == 'a'
   for b in ['a']
