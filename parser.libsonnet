@@ -571,7 +571,7 @@ local lexer = import './lexer.libsonnet';
       local token = lexicon[index];
       local possibleValues = ['importstr', 'importbin', 'import'];
 
-      assert std.member(['importstr', 'importbin', 'import'], token[1]) : 'Expected %s but got %s' % [possibleValues, token[1]];
+      assert std.member(possibleValues, token[1]) : 'Expected %s but got %s' % [possibleValues, token[1]];
 
       local map = {
         STRING_SINGLE: this.parseString,
@@ -586,7 +586,7 @@ local lexer = import './lexer.libsonnet';
 
       {
         type: token[1] + '_statement',
-        path: path,
+        path: path.string,
         cursor:: path.cursor,
       },
 
