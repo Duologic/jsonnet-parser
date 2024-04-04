@@ -19,6 +19,7 @@ local file1 = import './test1.jsonnet';
     'a' + b
     for b in ['a', 'b', 'c']
   ],
+  a: $,
   ['expr' + '_fieldname']: null,
   assert true,
   assert local b = 'b'; true : 'withReturn',

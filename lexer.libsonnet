@@ -40,7 +40,7 @@ local stripLeadingComments(s) =
     'then',
     'else',
     'for',
-    //'in', // binaryop
+    'in',  // binaryop, see lexIdentifier
     'super',
 
     'function',
@@ -50,6 +50,13 @@ local stripLeadingComments(s) =
     'import',
     'importstr',
     'importbin',
+
+    // literals, handled by parser
+    //'null',
+    //'true',
+    //'false',
+    //'self',
+    //'$', // see lexOperator
   ],
 
   lexIdentifier(str):
@@ -204,7 +211,17 @@ local stripLeadingComments(s) =
       else [];
     local q = std.join('', infunc(str));
 
-    if q != '' && q != '|||'
+    assert !std.member(q, '//') : 'The sequence // is not allowed in an operator.';
+    assert !std.member(q, '/*') : 'The sequence /* is not allowed in an operator.';
+
+    local noEndSequence = ['+', '-', '~', '!', '$'];
+    assert !(std.length(q) > 1 && std.member(noEndSequence, q[std.length(q) - 1]))
+           : 'If the sequence has more than one character, it is not allowed to end in any of +, -, ~, !, $.';
+
+    if q == '$'
+    then ['IDENTIFIER', q]
+    else if q != ''
+            && q != '|||'  // don't assert on this as it is handled by lexTextBlock
     then ['OPERATOR', q]
     else [],
 
