@@ -5,6 +5,9 @@ local lexer = import './lexer.libsonnet';
     local this = self,
     local lexicon = lexer.lex(file),
 
+    local expmsg(expected, actual) =
+      'Expected "%s" but got "%s"' % [std.toString(expected), std.toString(actual)],
+
     local lexMap = {
       IDENTIFIER: this.parseIdentifier,
       NUMBER: this.parseNumber,
@@ -121,6 +124,8 @@ local lexer = import './lexer.libsonnet';
     parseString(index):
       local token = lexicon[index];
       local tokenValue = token[1];
+      local expected = ['STRING_SINGLE', 'STRING_DOUBLE'];
+      assert std.member(expected, token[0]) : expmsg(expected, token);
       {
         type: 'string',
         string: tokenValue[1:std.length(tokenValue) - 1],
@@ -130,13 +135,8 @@ local lexer = import './lexer.libsonnet';
     parseVerbatimString(index):
       local token = lexicon[index];
       local tokenValue = token[1];
-
-      assert
-        token[0] == 'VERBATIM_STRING_SINGLE'
-        || token[0] == 'VERBATIM_STRING_DOUBLE'
-        : 'Expected VERBATIM_STRING_SINGLE or VERBATIM_STRING_DOUBLE but got '
-          + std.toString(token);
-
+      local expected = ['VERBATIM_STRING_SINGLE', 'VERBATIM_STRING_DOUBLE'];
+      assert std.member(expected, token[0]) : expmsg(expected, token);
       {
         type: 'string',
         string: tokenValue[2:std.length(tokenValue) - 1],
@@ -146,23 +146,15 @@ local lexer = import './lexer.libsonnet';
 
     parseTextBlock(index):
       local token = lexicon[index];
-
-      assert
-        token[0] == 'STRING_BLOCK'
-        : 'Expected STRING_BLOCK but got '
-          + std.toString(token);
-
       local tokenValue = token[1];
+      assert token[0] == 'STRING_BLOCK' : expmsg('STRING_BLOCK', token);
 
       local lines = std.split(tokenValue, '\n');
-
       local spacesOnFirstLine = std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' '));
-
       local string = std.join('\n', [
         line[spacesOnFirstLine:]
         for line in lines[1:std.length(lines) - 1]
       ]);
-
       {
         type: 'string',
         string: string,
@@ -242,8 +234,7 @@ local lexer = import './lexer.libsonnet';
 
     parseObject(index):
       local token = lexicon[index];
-
-      assert token[1] == '{' : 'Expected { but got ' + token[1];
+      assert token[1] == '{' : expmsg('{', token);
 
       local memberEndtokens = ['}', 'for', 'if'];
       local members = parseTokens(
@@ -286,7 +277,7 @@ local lexer = import './lexer.libsonnet';
           else forspec.cursor
         else nextCursor;
 
-      assert lexicon[cursor][1] == '}' : 'Expected } but got ' + lexicon[cursor][1];
+      assert lexicon[cursor][1] == '}' : expmsg('}', lexicon[cursor]);
 
       if isForloop
       then {
@@ -306,8 +297,7 @@ local lexer = import './lexer.libsonnet';
 
     parseArray(index):
       local token = lexicon[index];
-
-      assert token[1] == '[' : 'Expected [ but got ' + token[1];
+      assert token[1] == '[' : expmsg('[', token);
 
       local itemEndtokens = [']', 'for', 'if'];
       local items = parseTokens(
@@ -340,7 +330,7 @@ local lexer = import './lexer.libsonnet';
           else forspec.cursor
         else nextCursor;
 
-      assert lexicon[cursor][1] == ']' : 'Expected ] but got ' + lexicon[cursor][1];
+      assert lexicon[cursor][1] == ']' : expmsg(']', lexicon[cursor]);
 
       if isForloop
       then {
@@ -358,7 +348,7 @@ local lexer = import './lexer.libsonnet';
 
     parseFieldaccess(obj):
       local token = lexicon[obj.cursor];
-      assert token[1] == '.' : 'Expected "." but got "%s"' % token[1];
+      assert token[1] == '.' : expmsg('.', token);
       local id = self.parseIdentifier(obj.cursor + 1);
       {
         type: 'fieldaccess',
@@ -368,7 +358,7 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseIndexing(obj):
-      assert lexicon[obj.cursor][1] == '[' : 'Expected [ but got ' + lexicon[obj.cursor][1];
+      assert lexicon[obj.cursor][1] == '[' : expmsg('[', lexicon[obj.cursor]);
       local literal(cursor) = {
         type: 'literal',
         literal: '',
@@ -396,7 +386,7 @@ local lexer = import './lexer.libsonnet';
         then last.cursor
         else obj.cursor + 1;
 
-      assert lexicon[cursor][1] == ']' : 'Expected ] but got ' + lexicon[cursor][1];
+      assert lexicon[cursor][1] == ']' : expmsg(']', lexicon[cursor]);
       {
         type: 'indexing',
         expr: obj,
@@ -405,7 +395,7 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseSuper(index, inObject):
-      assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
+      assert lexicon[index][1] == 'super' : expmsg('super', lexicon[index]);
       local map = {
         '.': this.parseFieldaccessSuper,
         '[': this.parseIndexingSuper,
@@ -414,8 +404,8 @@ local lexer = import './lexer.libsonnet';
       map[lexicon[index + 1][1]](index, inObject),
 
     parseFieldaccessSuper(index, inObject):
-      assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
-      assert lexicon[index + 1][1] == '.' : 'Expected "." but got ' + lexicon[index + 1][1];
+      assert lexicon[index][1] == 'super' : expmsg('super', lexicon[index]);
+      assert lexicon[index + 1][1] == '.' : expmsg('.', lexicon[index + 1]);
       assert inObject : "Can't use super outside of an object";
       local id = self.parseIdentifier(index + 2);
       {
@@ -425,11 +415,11 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseIndexingSuper(index, inObject):
-      assert lexicon[index][1] == 'super' : 'Expected super but got ' + lexicon[index][1];
-      assert lexicon[index + 1][1] == '[' : 'Expected "[" but got ' + lexicon[index + 1][1];
+      assert lexicon[index][1] == 'super' : expmsg('super', lexicon[index]);
+      assert lexicon[index + 1][1] == '[' : expmsg('[', lexicon[index + 1]);
       assert inObject : "Can't use super outside of an object";
       local expr = self.parseExpr(index + 2, [']']);
-      assert lexicon[expr.cursor][1] == ']' : 'Expected "]" but got ' + lexicon[expr.cursor][1];
+      assert lexicon[expr.cursor][1] == ']' : expmsg(']', lexicon[expr.cursor]);
       {
         type: 'indexing_super',
         expr: expr,
@@ -437,7 +427,7 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseFunctioncall(obj):
-      assert lexicon[obj.cursor][1] == '(' : 'Expected ( but got ' + lexicon[obj.cursor][1];
+      assert lexicon[obj.cursor][1] == '(' : expmsg('(', lexicon[obj.cursor]);
 
       local args =
         parseTokens(
@@ -465,8 +455,7 @@ local lexer = import './lexer.libsonnet';
         then last.cursor
         else obj.cursor + 1;
 
-      assert lexicon[cursor][1] == ')' : 'Expected ")" but got "%s"' % lexicon[cursor][1];
-
+      assert lexicon[cursor][1] == ')' : expmsg(')', lexicon[cursor]);
       {
         type: 'functioncall',
         expr: obj,
@@ -494,7 +483,7 @@ local lexer = import './lexer.libsonnet';
          else {}),
 
     parseLocalBind(index, endTokens):
-      assert lexicon[index][1] == 'local' : 'Expected local but got ' + lexicon[index][1];
+      assert lexicon[index][1] == 'local' : expmsg('local', lexicon[index]);
       local binds =
         parseTokens(
           index + 1,
@@ -504,7 +493,7 @@ local lexer = import './lexer.libsonnet';
             self.parseBind(index, [',', ';'])
         );
       local last = std.reverse(binds)[0];
-      assert lexicon[last.cursor][1] == ';' : 'Expected ; but got ' + lexicon[last.cursor][1];
+      assert lexicon[last.cursor][1] == ';' : expmsg(';', lexicon[last.cursor]);
       local expr = self.parseExpr(last.cursor + 1, endTokens);
       {
         type: 'local_bind',
@@ -515,10 +504,10 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseConditional(index, endTokens, inObject):
-      assert lexicon[index][1] == 'if' : 'Expected if but got ' + lexicon[index][1];
+      assert lexicon[index][1] == 'if' : expmsg('if', lexicon[index]);
       local ifExpr = self.parseExpr(index + 1, ['then'], inObject);
 
-      assert lexicon[ifExpr.cursor][1] == 'then' : 'Expected then but got ' + lexicon[ifExpr.cursor][1];
+      assert lexicon[ifExpr.cursor][1] == 'then' : expmsg('then', lexicon[ifExpr.cursor]);
       local thenExpr = self.parseExpr(ifExpr.cursor + 1, ['else'] + endTokens, inObject);
 
       local hasElseExpr = (lexicon[thenExpr.cursor][1] == 'else');
@@ -528,7 +517,6 @@ local lexer = import './lexer.libsonnet';
         if hasElseExpr
         then elseExpr.cursor
         else thenExpr.cursor;
-
       {
         type: 'conditional',
         if_expr: ifExpr,
@@ -547,7 +535,7 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseAnonymousFunction(index, endTokens, inObject):
-      assert lexicon[index][1] == 'function' : 'Expected "function" but got "%s"' % lexicon[index][1];
+      assert lexicon[index][1] == 'function' : expmsg('function', lexicon[index]);
       local params = self.parseParams(index + 1);
       local expr = self.parseExpr(params.cursor, endTokens, inObject);
       {
@@ -559,7 +547,7 @@ local lexer = import './lexer.libsonnet';
 
     parseAssertionExpr(index, endTokens, inObject):
       local assertion = self.parseAssertion(index, [';'], inObject);
-      assert lexicon[assertion.cursor][1] == ';' : 'Expected ; but got ' + lexicon[assertion.cursor][1];
+      assert lexicon[assertion.cursor][1] == ';' : expmsg(';', lexicon[assertion.cursor]);
       local expr = self.parseExpr(assertion.cursor + 1, endTokens, inObject);
       {
         type: 'assertion_expr',
@@ -571,8 +559,7 @@ local lexer = import './lexer.libsonnet';
     parseImport(index):
       local token = lexicon[index];
       local possibleValues = ['importstr', 'importbin', 'import'];
-
-      assert std.member(possibleValues, token[1]) : 'Expected %s but got %s' % [possibleValues, token[1]];
+      assert std.member(possibleValues, token[1]) : expmsg(possibleValues, token);
 
       local map = {
         STRING_SINGLE: this.parseString,
@@ -584,7 +571,6 @@ local lexer = import './lexer.libsonnet';
       assert !std.startsWith(lexicon[index + 1][0], 'STRING_BLOCK') : 'Block string literal not allowed for imports';
       local parsePath = getParseFunction(map, lexicon[index + 1][0]);
       local path = parsePath(index + 1);
-
       {
         type: token[1] + '_statement',
         path: path.string,
@@ -592,7 +578,7 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseErrorExpr(index, endTokens, inObject):
-      assert lexicon[index][1] == 'error' : 'Expected "error" but got "%s"' % lexicon[index][1];
+      assert lexicon[index][1] == 'error' : expmsg('error', lexicon[index]);
       local expr = self.parseExpr(index + 1, endTokens, inObject);
       {
         type: 'error_expr',
@@ -604,7 +590,7 @@ local lexer = import './lexer.libsonnet';
       assert inObject : "Can't use super outside of an object";
       assert lexicon[obj.cursor][1] == 'in'
              && lexicon[obj.cursor + 1][1] == 'super'
-             : 'Expected "in super" but got "%s"' % lexicon[obj.cursor][1] + ' ' + lexicon[obj.cursor + 2][1];
+             : expmsg('in super', [lexicon[obj.cursor], lexicon[obj.cursor + 1]]);
       {
         type: 'expr_in_super',
         expr: obj,
@@ -612,9 +598,9 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseParenthesis(index):
-      assert lexicon[index][1] == '(' : 'Expected "(" but got "%s"' % lexicon[index][1];
+      assert lexicon[index][1] == '(' : expmsg('(', lexicon[index]);
       local expr = self.parseExpr(index + 1, [')']);
-      assert lexicon[expr.cursor][1] == ')' : 'Expected ")" but got "%s"' % lexicon[expr.cursor][1];
+      assert lexicon[expr.cursor][1] == ')' : expmsg(')', lexicon[expr.cursor]);
       {
         type: 'parenthesis',
         expr: expr,
@@ -631,7 +617,7 @@ local lexer = import './lexer.libsonnet';
 
     parseObjectLocal(index, endTokens):
       local token = lexicon[index];
-      assert token[1] == 'local' : 'Expected "local" but got "%s"' % token[1];
+      assert token[1] == 'local' : expmsg('local', token);
       local bind = self.parseBind(index + 1, endTokens, inObject=true);
       {
         type: 'object_local',
@@ -650,8 +636,7 @@ local lexer = import './lexer.libsonnet';
         then params.cursor
         else id.cursor;
 
-      local operator = lexicon[nextCursor][1];
-      assert operator == '=' : 'Expected token = but got "%s"' % operator;
+      assert lexicon[nextCursor][1] == '=' : expmsg('=', lexicon[nextCursor]);
 
       local expr = self.parseExpr(nextCursor + 1, endTokens, inObject);
       {
@@ -668,7 +653,7 @@ local lexer = import './lexer.libsonnet';
          else {}),
 
     parseAssertion(index, endTokens, inObject=false):
-      assert lexicon[index][1] == 'assert' : 'Expected "assert" but got "%s"' % lexicon[index][1];
+      assert lexicon[index][1] == 'assert' : expmsg('assert', lexicon[index]);
       local expr = self.parseExpr(index + 1, [':'] + endTokens, inObject);
 
       local hasReturnExpr = lexicon[expr.cursor][1] == ':';
@@ -679,7 +664,7 @@ local lexer = import './lexer.libsonnet';
         then returnExpr.cursor
         else expr.cursor;
 
-      assert std.member(endTokens, lexicon[cursor][1]) : 'Expected %s but got %s' % [std.toString(endTokens), lexicon[cursor][1]];
+      assert std.member(endTokens, lexicon[cursor][1]) : expmsg(std.join(',', endTokens), lexicon[cursor]);
       {
         type: 'assertion',
         expr: expr,
@@ -700,7 +685,7 @@ local lexer = import './lexer.libsonnet';
 
       local operator = lexicon[nextCursor][1];
       local expectOp = [':', '::', ':::', '+:', '+::', '+:::'];
-      assert std.member(expectOp, operator) : 'Expected token %s but got "%s"' % [std.join('","', expectOp), operator];
+      assert std.member(expectOp, operator) : expmsg(std.join('","', expectOp), lexicon[nextCursor]);
 
       local additive = std.startsWith(operator, '+');
       local h =
@@ -732,9 +717,9 @@ local lexer = import './lexer.libsonnet';
 
     parseFieldnameExpr(index):
       local token = lexicon[index];
-      assert token[1] == '[' : 'Expected "[" but got "%s"' % token[1];
+      assert token[1] == '[' : expmsg('[', token);
       local expr = self.parseExpr(index + 1, endTokens=[']']);
-      assert lexicon[expr.cursor][1] == ']' : 'Expected "]" but got "%s"' % lexicon[expr.cursor][1];
+      assert lexicon[expr.cursor][1] == ']' : expmsg(']', lexicon[expr.cursor]);
       {
         type: 'fieldname_expr',
         expr: expr,
@@ -743,18 +728,14 @@ local lexer = import './lexer.libsonnet';
 
     parseParams(index):
       local token = lexicon[index];
-
-      assert token[1] == '(' : 'Expected ( but got ' + token[1];
-
+      assert token[1] == '(' : expmsg('(', token);
       local params = parseTokens(index + 1, [')'], ',', self.parseParam);
-
       local last = std.reverse(params)[0];
       local cursor =
         if std.length(params) > 0
         then last.cursor
         else index + 1;
-
-      assert lexicon[cursor][1] == ')' : 'Expected ) but got ' + lexicon[cursor][1];
+      assert lexicon[cursor][1] == ')' : expmsg(')', lexicon[cursor]);
       {
         type: 'params',
         params: params,
@@ -779,14 +760,12 @@ local lexer = import './lexer.libsonnet';
 
     parseForspec(index, endTokens):
       local token = lexicon[index];
-      assert token[1] == 'for' : 'Expected "for" but got "%s"' % token[1];
+      assert token[1] == 'for' : expmsg('for', token);
 
       local id = self.parseIdentifier(index + 1);
-
-      assert lexicon[id.cursor][1] == 'in' : 'Expected "in" but got "%s"' % lexicon[id.cursor][1];
+      assert lexicon[id.cursor][1] == 'in' : expmsg('in', lexicon[id.cursor]);
 
       local expr = self.parseExpr(id.cursor + 1, endTokens);
-
       {
         type: 'forspec',
         id: id,
@@ -796,7 +775,7 @@ local lexer = import './lexer.libsonnet';
 
     parseIfspec(index, endTokens):
       local token = lexicon[index];
-      assert token[1] == 'if' : 'Expected "if" but got "%s"' % token[1];
+      assert token[1] == 'if' : expmsg('if', token);
 
       local expr = self.parseExpr(index + 1, endTokens);
       {
@@ -821,7 +800,7 @@ local lexer = import './lexer.libsonnet';
             if std.member(endTokens, token[1])
             then { cursor: index }
             else
-              assert std.member(['for', 'if'], token[1]) : 'Expected "for" or "if" but got "%s"' % std.toString(token);
+              assert std.member(['for', 'if'], token[1]) : expmsg(['for', 'if'], token);
               compMap[token[1]](index - 1, endTokens + ['for', 'if'])
         );
       local last = std.reverse(items)[0];
