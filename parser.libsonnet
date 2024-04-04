@@ -269,6 +269,7 @@ local lexer = import './lexer.libsonnet';
       assert !(isForloop && std.length(asserts) != 0) : 'Object comprehension cannot have asserts';
       assert !(isForloop && std.length(fields) > 1) : 'Object comprehension can only have one field';
       assert !(isForloop && fields[0].fieldname.type != 'fieldname_expr') : 'Object comprehension can only have [e] fields';
+      assert !(isForloop && std.get(fields[0], 'additive', false)) : 'Object comprehension field can not be [e]+ (additive)';
 
       local fieldIndex = std.prune(std.mapWithIndex(function(i, m) if m == fields[0] then i else null, members))[0];
       local leftObjectLocals = members[:fieldIndex];
@@ -701,11 +702,18 @@ local lexer = import './lexer.libsonnet';
       local expectOp = [':', '::', ':::', '+:', '+::', '+:::'];
       assert std.member(expectOp, operator) : 'Expected token %s but got "%s"' % [std.join('","', expectOp), operator];
 
+      local additive = std.startsWith(operator, '+');
+      local h =
+        if additive
+        then operator[1:]
+        else operator;
+
       local expr = self.parseExpr(nextCursor + 1, endTokens, true);
       {
         type: 'field',
         fieldname: fieldname,
-        h: operator,
+        [if additive then 'additive']: additive,
+        h: h,
         expr: expr,
         cursor:: expr.cursor,
       }
