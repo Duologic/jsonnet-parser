@@ -1,10 +1,7 @@
 {
    "bind": {
       "expr": {
-         "path": {
-            "string": "./lexer.libsonnet",
-            "type": "string"
-         },
+         "path": "./lexer.libsonnet",
          "type": "import_statement"
       },
       "id": {
@@ -11751,21 +11748,8 @@
                                     "args": [
                                        {
                                           "expr": {
-                                             "items": [
-                                                {
-                                                   "string": "importstr",
-                                                   "type": "string"
-                                                },
-                                                {
-                                                   "string": "importbin",
-                                                   "type": "string"
-                                                },
-                                                {
-                                                   "string": "import",
-                                                   "type": "string"
-                                                }
-                                             ],
-                                             "type": "array"
+                                             "id": "possibleValues",
+                                             "type": "id"
                                           },
                                           "type": "arg"
                                        },
@@ -12122,8 +12106,17 @@
                                                 },
                                                 {
                                                    "expr": {
-                                                      "id": "path",
-                                                      "type": "id"
+                                                      "exprs": [
+                                                         {
+                                                            "id": "path",
+                                                            "type": "id"
+                                                         }
+                                                      ],
+                                                      "id": {
+                                                         "id": "string",
+                                                         "type": "id"
+                                                      },
+                                                      "type": "fieldaccess"
                                                    },
                                                    "fieldname": {
                                                       "id": "path",
