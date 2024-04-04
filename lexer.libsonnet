@@ -83,31 +83,23 @@ local stripLeadingComments(s) =
     else [],
 
   lexNumber(str):
-    local value =
-      if !isNumber(str[0])
-      then ''
-      else
-        std.foldl(
-          function(acc, c)
-            if acc.break
-            then acc
-            else if isNumber(c)
-            then acc + { value+: c }
-            else if acc.hasDecimalPoint
-            then error "Couldn't lex number , junk after decimal point"
-            else if c == '.' && !acc.hasDecimalPoint
-            then acc + { value+: c, hasDecimalPoint: true }
-            else acc + { break: true },
-          std.stringChars(str),
-          {
-            break: false,
-            hasDecimalPoint: false,
-            value: '',
-          }
-        ).value;
-    if value != ''
-    then ['NUMBER', value]
-    else [],
+    if !isNumber(str[0])
+    then []
+    else
+      local s = ['-', '+', '.', 'e', 'E'];
+      local aux(index=0, return='') =
+        if index < std.length(str) && xtd.ascii.isStringJSONNumeric(return + str[index])
+        then aux(index + 1, return + str[index])
+        else if index + 1 < std.length(str) && std.member(s, str[index])
+        then aux(index + 1, return + str[index])
+        else if index + 1 <= std.length(str) && std.member(s, str[index])
+        then error "Couldn't lex number, junk after %s" % str[index]
+        else return;
+
+      local value = aux();
+      if value != ''
+      then ['NUMBER', value]
+      else [],
 
   lexString(str):
     if std.startsWith(str, "'")
