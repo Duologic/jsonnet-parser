@@ -8,89 +8,73 @@ local lexer = import './lexer.libsonnet';
     local expmsg(expected, actual) =
       'Expected "%s" but got "%s"' % [std.toString(expected), std.toString(actual)],
 
-    local lexMap = {
-      IDENTIFIER: this.parseIdentifier,
-      NUMBER: this.parseNumber,
-      STRING_SINGLE: this.parseString,
-      STRING_DOUBLE: this.parseString,
-      VERBATIM_STRING_SINGLE: this.parseVerbatimString,
-      VERBATIM_STRING_DOUBLE: this.parseVerbatimString,
-      STRING_BLOCK: this.parseTextBlock,
-      OPERATOR: this.parseUnary,
-      SYMBOL: this.parseSymbol,
-    },
-
-    local symbolMap = {
-      '{': this.parseObject,
-      '[': this.parseArray,
-      '(': this.parseParenthesis,
-    },
-
-    local symbolRemainderMap = {
-      '.': this.parseFieldaccess,
-      '[': this.parseIndexing,
-      '(': this.parseFunctioncall,
-      '{': this.parseImplicitPlus,
-    },
-
     parse():
-      local token = lexicon[0];
-      local expr = self.parseExpr();
-      if expr.cursor == std.length(lexicon)
-      then expr
-      else lexicon[expr.cursor:],
+      self.parseExpr(),
 
     parseExpr(index=0, endTokens=[], inObject=false):
       local token = lexicon[index];
+
       local expr =
-        (if token[0] == 'OPERATOR'
-         then self.parseUnary(index, endTokens, inObject)
-         else if token[1] == 'local'
-         then self.parseLocalBind(index, endTokens)
-         else if token[1] == 'super'
-         then self.parseSuper(index, inObject)
-         else if token[1] == 'if'
-         then self.parseConditional(index, endTokens, inObject)
-         else if token[1] == 'function'
-         then self.parseAnonymousFunction(index, endTokens, inObject)
-         else if token[1] == 'assert'
-         then self.parseAssertionExpr(index, endTokens, inObject)
-         else if std.member(['importstr', 'importbin', 'import'], token[1])
-         then self.parseImport(index)
-         else if token[1] == 'error'
-         then self.parseErrorExpr(index, endTokens, inObject)
-         else self.parseLex(index));
+        if token[0] == 'IDENTIFIER'
+        then self.parseIdentifier(index, endTokens, inObject)
+        else if std.member(['STRING_SINGLE', 'STRING_DOUBLE'], token[0])
+        then self.parseString(index, endTokens, inObject)
+        else if std.member(['VERBATIM_STRING_SINGLE', 'VERBATIM_STRING_DOUBLE'], token[0])
+        then self.parseVerbatimString(index, endTokens, inObject)
+        else if token[0] == 'STRING_BLOCK'
+        then self.parseTextBlock(index, endTokens, inObject)
+        else if token[0] == 'NUMBER'
+        then self.parseNumber(index, endTokens, inObject)
+        else if token[1] == '{'
+        then self.parseObject(index, endTokens, inObject)
+        else if token[1] == '['
+        then self.parseArray(index, endTokens, inObject)
+        else if token[1] == 'super'
+        then self.parseSuper(index, endTokens, inObject)
+        else if token[1] == 'local'
+        then self.parseLocalBind(index, endTokens, inObject)
+        else if token[1] == 'if'
+        then self.parseConditional(index, endTokens, inObject)
+        else if token[0] == 'OPERATOR'
+        then self.parseUnary(index, endTokens, inObject)
+        else if token[1] == 'function'
+        then self.parseAnonymousFunction(index, endTokens, inObject)
+        else if token[1] == 'assert'
+        then self.parseAssertionExpr(index, endTokens, inObject)
+        else if std.member(['importstr', 'importbin', 'import'], token[1])
+        then self.parseImport(index, endTokens, inObject)
+        else if token[1] == 'error'
+        then self.parseErrorExpr(index, endTokens, inObject)
+        else if token[1] == '('
+        then self.parseParenthesis(index, endTokens, inObject)
+        else error 'Unexpected token: "%s"' % std.toString(token);
 
-      self.parseExprRemainder(expr, endTokens, inObject),
 
-    parseExprRemainder(obj, endTokens, inObject):
-      if obj.cursor == std.length(lexicon)
-         || std.member(endTokens, lexicon[obj.cursor][1])
-      then obj
-      else
-        local token = lexicon[obj.cursor];
-        local expr =
-          (if lexicon[obj.cursor][1] == 'in' && lexicon[obj.cursor + 1][1] == 'super'
-           then self.parseExprInSuper(obj, inObject)
-           else if token[0] == 'OPERATOR' && std.member(binaryoperators, token[1])
-           then self.parseBinary(obj, endTokens)
-           else getParseFunction(
-             symbolRemainderMap,
-             token[1],
-             function(o) error 'Unexpected token: ' + std.toString(lexicon[o.cursor])
-           )(obj));
-        self.parseExprRemainder(expr, endTokens, inObject),
+      local parseRemainder(obj) =
+        if obj.cursor == std.length(lexicon)
+           || std.member(endTokens, lexicon[obj.cursor][1])
+        then obj
+        else
+          local token = lexicon[obj.cursor];
+          local expr =
+            if token[1] == '.'
+            then self.parseFieldaccess(obj, endTokens, inObject)
+            else if token[1] == '['
+            then self.parseIndexing(obj, endTokens, inObject)
+            else if token[1] == '('
+            then self.parseFunctioncall(obj, endTokens, inObject)
+            else if token[1] == '{'
+            then self.parseImplicitPlus(obj, endTokens, inObject)
+            else if lexicon[obj.cursor][1] == 'in' && lexicon[obj.cursor + 1][1] == 'super'
+            then self.parseExprInSuper(obj, endTokens, inObject)
+            else if token[0] == 'OPERATOR' && std.member(binaryoperators, token[1])
+            then self.parseBinary(obj, endTokens, inObject)
+            else error 'Unexpected token: "%s"' % std.toString(token);
+          parseRemainder(expr);
 
-    local getParseFunction(map, key, default=function(i) error 'Unexpected token: ' + std.toString(lexicon[i])) =
-      std.get(map, key, default),
+      parseRemainder(expr),
 
-    parseLex(index):
-      getParseFunction(lexMap, lexicon[index][0])(index),
-
-    parseSymbol(index):
-      getParseFunction(symbolMap, lexicon[index][1])(index),
-
-    parseIdentifier(index):
+    parseIdentifier(index, endTokens=[], inObject=false):
       local token = lexicon[index];
       local tokenValue = token[1];
       local literals = {
@@ -98,7 +82,7 @@ local lexer = import './lexer.libsonnet';
         'true': true,
         'false': false,
         'self': 'self',
-        '$': '$',  // FIXME: is not seen as identifier
+        '$': '$',
       };
       if std.member(std.objectFields(literals), tokenValue)
       then {
@@ -112,16 +96,7 @@ local lexer = import './lexer.libsonnet';
         cursor:: index + 1,
       },
 
-    parseNumber(index):
-      local token = lexicon[index];
-      local tokenValue = token[1];
-      {
-        type: 'number',
-        number: tokenValue,
-        cursor:: index + 1,
-      },
-
-    parseString(index):
+    parseString(index, endTokens, inObject):
       local token = lexicon[index];
       local tokenValue = token[1];
       local expected = ['STRING_SINGLE', 'STRING_DOUBLE'];
@@ -132,7 +107,7 @@ local lexer = import './lexer.libsonnet';
         cursor:: index + 1,
       },
 
-    parseVerbatimString(index):
+    parseVerbatimString(index, endTokens, inObject):
       local token = lexicon[index];
       local tokenValue = token[1];
       local expected = ['VERBATIM_STRING_SINGLE', 'VERBATIM_STRING_DOUBLE'];
@@ -144,7 +119,7 @@ local lexer = import './lexer.libsonnet';
         cursor:: index + 1,
       },
 
-    parseTextBlock(index):
+    parseTextBlock(index, endTokens, inObject):
       local token = lexicon[index];
       local tokenValue = token[1];
       assert token[0] == 'STRING_BLOCK' : expmsg('STRING_BLOCK', token);
@@ -159,6 +134,15 @@ local lexer = import './lexer.libsonnet';
         type: 'string',
         string: string,
         textblock: true,
+        cursor:: index + 1,
+      },
+
+    parseNumber(index, endTokens, inObject):
+      local token = lexicon[index];
+      local tokenValue = token[1];
+      {
+        type: 'number',
+        number: tokenValue,
         cursor:: index + 1,
       },
 
@@ -184,12 +168,12 @@ local lexer = import './lexer.libsonnet';
       '||',
     ],
 
-    parseBinary(expr, endTokens=[]):
+    parseBinary(expr, endTokens=[], inObject):
       local index = expr.cursor;
       local leftExpr = expr;
       local binaryop = lexicon[index];
       assert std.member(binaryoperators, binaryop[1]) : 'Not a binary operator: ' + binaryop[1];
-      local rightExpr = self.parseExpr(index + 1, endTokens);
+      local rightExpr = self.parseExpr(index + 1, endTokens, inObject);
       {
         type: 'binary',
         binaryop: binaryop[1],
@@ -227,23 +211,27 @@ local lexer = import './lexer.libsonnet';
         else if std.member(endTokens, nextToken[1])
         then [item]
         else if std.member(split, nextToken[1])
-        then [item + { cursor+:: 1 }]
+        then [item { cursor+:: 1 }]
              + infunc(item.cursor + 1)
         else error 'Expected %s before next item but got "%s"' % [split, item];
       infunc(index),
 
-    parseObject(index):
+    parseObject(index, endTokens, inObject):
+      local endTokens = ['}'];
+      local inObject = true;
+
       local token = lexicon[index];
       assert token[1] == '{' : expmsg('{', token);
 
-      local memberEndtokens = ['}', 'for', 'if'];
-      local members = parseTokens(
-        index + 1,
-        memberEndtokens,
-        ',',
-        function(index)
-          self.parseMember(index, [','] + memberEndtokens)
-      );
+      local memberEndtokens = endTokens + ['for'];
+      local members =
+        parseTokens(
+          index + 1,
+          memberEndtokens,
+          ',',
+          function(index)
+            self.parseMember(index, memberEndtokens + [','], inObject)
+        );
 
       local last = std.reverse(members)[0];
       local nextCursor =
@@ -252,7 +240,7 @@ local lexer = import './lexer.libsonnet';
         else index + 1;
 
       local isForloop = (lexicon[nextCursor][1] == 'for');
-      local forspec = self.parseForspec(nextCursor, ['}', 'for', 'if']);
+      local forspec = self.parseForspec(nextCursor, endTokens + ['for', 'if'], inObject);
 
       local fields = std.filter(function(member) member.type == 'field' || member.type == 'field_function', members);
       local asserts = std.filter(function(member) member.type == 'assertion', members);
@@ -267,7 +255,7 @@ local lexer = import './lexer.libsonnet';
       local rightObjectLocals = members[fieldIndex + 1:];
 
       local hasCompspec = std.member(['for', 'if'], lexicon[forspec.cursor][1]);
-      local compspec = self.parseCompspec(forspec.cursor, ['}']);
+      local compspec = self.parseCompspec(forspec.cursor, endTokens, inObject);
 
       local cursor =
         if isForloop
@@ -295,18 +283,21 @@ local lexer = import './lexer.libsonnet';
         cursor:: cursor + 1,
       },
 
-    parseArray(index):
+    parseArray(index, endTokens, inObject):
+      local endTokens = [']'];
+
       local token = lexicon[index];
       assert token[1] == '[' : expmsg('[', token);
 
-      local itemEndtokens = [']', 'for', 'if'];
-      local items = parseTokens(
-        index + 1,
-        itemEndtokens,
-        ',',
-        function(index)
-          self.parseExpr(index, [','] + itemEndtokens)
-      );
+      local itemEndtokens = endTokens + ['for'];
+      local items =
+        parseTokens(
+          index + 1,
+          itemEndtokens,
+          ',',
+          function(index)
+            self.parseExpr(index, itemEndtokens + [','], inObject)
+        );
 
       local last = std.reverse(items)[0];
       local nextCursor =
@@ -315,12 +306,12 @@ local lexer = import './lexer.libsonnet';
         else index + 1;
 
       local isForloop = (lexicon[nextCursor][1] == 'for');
-      local forspec = self.parseForspec(nextCursor, [']', 'for', 'if']);
+      local forspec = self.parseForspec(nextCursor, endTokens + ['for', 'if'], inObject);
 
       assert !(isForloop && std.length(items) > 1) : 'Array forloop can only have one expression';
 
       local hasCompspec = std.member(['for', 'if'], lexicon[forspec.cursor][1]);
-      local compspec = self.parseCompspec(forspec.cursor, [']']);
+      local compspec = self.parseCompspec(forspec.cursor, [']'], inObject);
 
       local cursor =
         if isForloop
@@ -346,10 +337,10 @@ local lexer = import './lexer.libsonnet';
         cursor:: cursor + 1,
       },
 
-    parseFieldaccess(obj):
+    parseFieldaccess(obj, endTokens, inObject):
       local token = lexicon[obj.cursor];
       assert token[1] == '.' : expmsg('.', token);
-      local id = self.parseIdentifier(obj.cursor + 1);
+      local id = self.parseIdentifier(obj.cursor + 1, endTokens, inObject);
       {
         type: 'fieldaccess',
         exprs: [obj],
@@ -357,26 +348,27 @@ local lexer = import './lexer.libsonnet';
         cursor:: id.cursor,
       },
 
-    parseIndexing(obj):
+    parseIndexing(obj, endTokens, inObject):
+      local endTokens = [']'];
       assert lexicon[obj.cursor][1] == '[' : expmsg('[', lexicon[obj.cursor]);
       local literal(cursor) = {
         type: 'literal',
         literal: '',
         cursor:: cursor,
       };
-      local f(index) =
+      local parseExprs(index) =
         local token = lexicon[index];
         local prevToken = lexicon[index - 1];
-        local expr = self.parseExpr(index, [':', '::', ']']);
+        local expr = self.parseExpr(index, endTokens + [':', '::'], inObject);
         if token[1] == ']'
         then []
         else if token[1] == ':' && prevToken[0] != 'OPERATOR'
-        then [literal(index + 1)] + f(index + 1)
+        then [literal(index + 1)] + parseExprs(index + 1)
         else if token[1] == '::' && prevToken[0] != 'OPERATOR'
-        then [literal(index + 1), literal(index + 1)] + f(index + 1)
-        else [expr] + f(expr.cursor);
+        then [literal(index + 1), literal(index + 1)] + parseExprs(index + 1)
+        else [expr] + parseExprs(expr.cursor);
 
-      local exprs = f(obj.cursor + 1);
+      local exprs = parseExprs(obj.cursor + 1);
 
       assert std.length(exprs) != 0 : 'Indexing requires an expression';
 
@@ -394,39 +386,31 @@ local lexer = import './lexer.libsonnet';
         cursor:: cursor + 1,
       },
 
-    parseSuper(index, inObject):
+    parseSuper(index, endTokens, inObject):
       assert lexicon[index][1] == 'super' : expmsg('super', lexicon[index]);
-      local map = {
-        '.': this.parseFieldaccessSuper,
-        '[': this.parseIndexingSuper,
-      };
-
-      map[lexicon[index + 1][1]](index, inObject),
-
-    parseFieldaccessSuper(index, inObject):
-      assert lexicon[index][1] == 'super' : expmsg('super', lexicon[index]);
-      assert lexicon[index + 1][1] == '.' : expmsg('.', lexicon[index + 1]);
       assert inObject : "Can't use super outside of an object";
-      local id = self.parseIdentifier(index + 2);
-      {
-        type: 'fieldaccess_super',
-        id: id,
-        cursor:: id.cursor,
-      },
+      local token = lexicon[index + 1];
+      if token[1] == '.'
+      then
+        local id = self.parseIdentifier(index + 2, endTokens, inObject);
+        {
+          type: 'fieldaccess_super',
+          id: id,
+          cursor:: id.cursor,
+        }
+      else if token[1] == '['
+      then
+        local endTokens = [']'];
+        local expr = self.parseExpr(index + 2, endTokens, inObject);
+        assert lexicon[expr.cursor][1] == ']' : expmsg(']', lexicon[expr.cursor]);
+        {
+          type: 'indexing_super',
+          expr: expr,
+          cursor:: expr.cursor + 1,
+        }
+      else error expmsg(['.', '['], token),
 
-    parseIndexingSuper(index, inObject):
-      assert lexicon[index][1] == 'super' : expmsg('super', lexicon[index]);
-      assert lexicon[index + 1][1] == '[' : expmsg('[', lexicon[index + 1]);
-      assert inObject : "Can't use super outside of an object";
-      local expr = self.parseExpr(index + 2, [']']);
-      assert lexicon[expr.cursor][1] == ']' : expmsg(']', lexicon[expr.cursor]);
-      {
-        type: 'indexing_super',
-        expr: expr,
-        cursor:: expr.cursor + 1,
-      },
-
-    parseFunctioncall(obj):
+    parseFunctioncall(obj, endTokens, inObject):
       assert lexicon[obj.cursor][1] == '(' : expmsg('(', lexicon[obj.cursor]);
 
       local args =
@@ -434,7 +418,8 @@ local lexer = import './lexer.libsonnet';
           obj.cursor + 1,
           [')'],
           [','],
-          self.parseArg,
+          function(index)
+            self.parseArg(index, endTokens, inObject),
         );
 
       local validargs =
@@ -463,12 +448,12 @@ local lexer = import './lexer.libsonnet';
         cursor:: cursor + 1,
       },
 
-    parseArg(index):
+    parseArg(index, endTokens, inObject):
       local endTokens = [',', ')'];
-      local expr = self.parseExpr(index, endTokens + ['=']);
+      local expr = self.parseExpr(index, endTokens + ['='], inObject);
       local hasExpr = (lexicon[expr.cursor][1] == '=');
-      local id = self.parseIdentifier(index);
-      local exprValue = self.parseExpr(id.cursor + 1, endTokens);
+      local id = self.parseIdentifier(index, endTokens, inObject);
+      local exprValue = self.parseExpr(id.cursor + 1, endTokens, inObject);
       {
         type: 'arg',
         expr: expr,
@@ -482,19 +467,20 @@ local lexer = import './lexer.libsonnet';
          }
          else {}),
 
-    parseLocalBind(index, endTokens):
+    parseLocalBind(index, endTokens, inObject):
+      local bindEndTokens = [';'];
       assert lexicon[index][1] == 'local' : expmsg('local', lexicon[index]);
       local binds =
         parseTokens(
           index + 1,
-          [';'],
+          bindEndTokens,
           ',',
           function(index)
-            self.parseBind(index, [',', ';'])
+            self.parseBind(index, bindEndTokens + [','], inObject)
         );
       local last = std.reverse(binds)[0];
       assert lexicon[last.cursor][1] == ';' : expmsg(';', lexicon[last.cursor]);
-      local expr = self.parseExpr(last.cursor + 1, endTokens);
+      local expr = self.parseExpr(last.cursor + 1, endTokens, inObject);
       {
         type: 'local_bind',
         bind: binds[0],
@@ -525,8 +511,8 @@ local lexer = import './lexer.libsonnet';
         cursor:: cursor,
       },
 
-    parseImplicitPlus(obj):
-      local object = self.parseObject(obj.cursor);
+    parseImplicitPlus(obj, endTokens, inObject):
+      local object = self.parseObject(obj.cursor, endTokens, inObject);
       {
         type: 'implicit_plus',
         expr: obj,
@@ -536,7 +522,7 @@ local lexer = import './lexer.libsonnet';
 
     parseAnonymousFunction(index, endTokens, inObject):
       assert lexicon[index][1] == 'function' : expmsg('function', lexicon[index]);
-      local params = self.parseParams(index + 1);
+      local params = self.parseParams(index + 1, endTokens, inObject);
       local expr = self.parseExpr(params.cursor, endTokens, inObject);
       {
         type: 'anonymous_function',
@@ -546,8 +532,9 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseAssertionExpr(index, endTokens, inObject):
-      local assertion = self.parseAssertion(index, [';'], inObject);
-      assert lexicon[assertion.cursor][1] == ';' : expmsg(';', lexicon[assertion.cursor]);
+      local assertionEndToken = ';';
+      local assertion = self.parseAssertion(index, [assertionEndToken], inObject);
+      assert lexicon[assertion.cursor][1] == assertionEndToken : expmsg(assertionEndToken, lexicon[assertion.cursor]);
       local expr = self.parseExpr(assertion.cursor + 1, endTokens, inObject);
       {
         type: 'assertion_expr',
@@ -556,21 +543,18 @@ local lexer = import './lexer.libsonnet';
         cursor:: expr.cursor,
       },
 
-    parseImport(index):
+    parseImport(index, endTokens, inObject):
       local token = lexicon[index];
       local possibleValues = ['importstr', 'importbin', 'import'];
       assert std.member(possibleValues, token[1]) : expmsg(possibleValues, token);
-
-      local map = {
-        STRING_SINGLE: this.parseString,
-        STRING_DOUBLE: this.parseString,
-        VERBATIM_STRING_SINGLE: this.parseVerbatimString,
-        VERBATIM_STRING_DOUBLE: this.parseVerbatimString,
-      };
-
       assert !std.startsWith(lexicon[index + 1][0], 'STRING_BLOCK') : 'Block string literal not allowed for imports';
-      local parsePath = getParseFunction(map, lexicon[index + 1][0]);
-      local path = parsePath(index + 1);
+      local path =
+        local token = lexicon[index + 1];
+        if std.member(['STRING_SINGLE', 'STRING_DOUBLE'], token[0])
+        then self.parseString(index + 1, endTokens, inObject)
+        else if std.member(['VERBATIM_STRING_SINGLE', 'VERBATIM_STRING_DOUBLE'], token[0])
+        then self.parseVerbatimString(index + 1, endTokens, inObject)
+        else error 'Unexpected token: "%s"' % std.toString(lexicon[index + 1]);
       {
         type: token[1] + '_statement',
         path: path.string,
@@ -586,7 +570,7 @@ local lexer = import './lexer.libsonnet';
         cursor:: expr.cursor,
       },
 
-    parseExprInSuper(obj, inObject):
+    parseExprInSuper(obj, endTokens, inObject):
       assert inObject : "Can't use super outside of an object";
       assert lexicon[obj.cursor][1] == 'in'
              && lexicon[obj.cursor + 1][1] == 'super'
@@ -597,9 +581,9 @@ local lexer = import './lexer.libsonnet';
         cursor:: obj.cursor + 2,
       },
 
-    parseParenthesis(index):
+    parseParenthesis(index, endTokens, inObject):
       assert lexicon[index][1] == '(' : expmsg('(', lexicon[index]);
-      local expr = self.parseExpr(index + 1, [')']);
+      local expr = self.parseExpr(index + 1, [')'], inObject);
       assert lexicon[expr.cursor][1] == ')' : expmsg(')', lexicon[expr.cursor]);
       {
         type: 'parenthesis',
@@ -607,15 +591,15 @@ local lexer = import './lexer.libsonnet';
         cursor:: expr.cursor + 1,
       },
 
-    parseMember(index, endTokens):
+    parseMember(index, endTokens, inObject):
       local token = lexicon[index];
       if token[1] == 'local'
-      then self.parseObjectLocal(index, endTokens)
+      then self.parseObjectLocal(index, endTokens, inObject)
       else if token[1] == 'assert'
-      then self.parseAssertion(index, endTokens, inObject=true)
-      else self.parseField(index, endTokens),
+      then self.parseAssertion(index, endTokens, inObject)
+      else self.parseField(index, endTokens, inObject),
 
-    parseObjectLocal(index, endTokens):
+    parseObjectLocal(index, endTokens, inObject):
       local token = lexicon[index];
       assert token[1] == 'local' : expmsg('local', token);
       local bind = self.parseBind(index + 1, endTokens, inObject=true);
@@ -625,11 +609,11 @@ local lexer = import './lexer.libsonnet';
         cursor:: bind.cursor,
       },
 
-    parseBind(index, endTokens, inObject=false):
-      local id = self.parseIdentifier(index);
+    parseBind(index, endTokens, inObject):
+      local id = self.parseIdentifier(index, endTokens, inObject);
 
       local isFunction = (lexicon[id.cursor][1] == '(');
-      local params = self.parseParams(id.cursor);
+      local params = self.parseParams(id.cursor, endTokens, inObject);
 
       local nextCursor =
         if isFunction
@@ -639,20 +623,22 @@ local lexer = import './lexer.libsonnet';
       assert lexicon[nextCursor][1] == '=' : expmsg('=', lexicon[nextCursor]);
 
       local expr = self.parseExpr(nextCursor + 1, endTokens, inObject);
-      {
+      if isFunction
+      then {
+        type: 'bind_function',
+        id: id,
+        expr: expr,
+        params: params,
+        cursor:: expr.cursor,
+      }
+      else {
         type: 'bind',
         id: id,
         expr: expr,
         cursor:: expr.cursor,
-      }
-      + (if isFunction
-         then {
-           type: 'bind_function',
-           params: params,
-         }
-         else {}),
+      },
 
-    parseAssertion(index, endTokens, inObject=false):
+    parseAssertion(index, endTokens, inObject):
       assert lexicon[index][1] == 'assert' : expmsg('assert', lexicon[index]);
       local expr = self.parseExpr(index + 1, [':'] + endTokens, inObject);
 
@@ -672,11 +658,11 @@ local lexer = import './lexer.libsonnet';
         cursor:: cursor,
       },
 
-    parseField(index, endTokens):
-      local fieldname = self.parseFieldname(index);
+    parseField(index, endTokens, inObject):
+      local fieldname = self.parseFieldname(index, endTokens, inObject);
 
       local isFunction = (lexicon[fieldname.cursor][1] == '(');
-      local params = self.parseParams(fieldname.cursor);
+      local params = self.parseParams(fieldname.cursor, endTokens, inObject);
 
       local nextCursor =
         if isFunction
@@ -693,7 +679,7 @@ local lexer = import './lexer.libsonnet';
         then operator[1:]
         else operator;
 
-      local expr = self.parseExpr(nextCursor + 1, endTokens, true);
+      local expr = self.parseExpr(nextCursor + 1, endTokens, inObject);
       {
         type: 'field',
         fieldname: fieldname,
@@ -709,16 +695,24 @@ local lexer = import './lexer.libsonnet';
          }
          else {}),
 
-    parseFieldname(index):
+    parseFieldname(index, endTokens, inObject):
       local token = lexicon[index];
-      if token[1] == '['
-      then self.parseFieldnameExpr(index)
-      else lexMap[token[0]](index),
+      if token[0] == 'IDENTIFIER'
+      then self.parseIdentifier(index, endTokens, inObject)
+      else if std.member(['STRING_SINGLE', 'STRING_DOUBLE'], token[0])
+      then self.parseString(index, endTokens, inObject)
+      else if std.member(['VERBATIM_STRING_SINGLE', 'VERBATIM_STRING_DOUBLE'], token[0])
+      then self.parseVerbatimString(index, endTokens, inObject)
+      else if token[0] == 'STRING_BLOCK'
+      then self.parseTextBlock(index, endTokens, inObject)
+      else if token[1] == '['
+      then self.parseFieldnameExpr(index, endTokens, inObject)
+      else error 'Unexpected token: "%s"' % std.toString(token),
 
-    parseFieldnameExpr(index):
+    parseFieldnameExpr(index, endTokens, inObject):
       local token = lexicon[index];
       assert token[1] == '[' : expmsg('[', token);
-      local expr = self.parseExpr(index + 1, endTokens=[']']);
+      local expr = self.parseExpr(index + 1, [']'], inObject);
       assert lexicon[expr.cursor][1] == ']' : expmsg(']', lexicon[expr.cursor]);
       {
         type: 'fieldname_expr',
@@ -726,10 +720,16 @@ local lexer = import './lexer.libsonnet';
         cursor:: expr.cursor + 1,
       },
 
-    parseParams(index):
+    parseParams(index, endTokens, inObject):
       local token = lexicon[index];
       assert token[1] == '(' : expmsg('(', token);
-      local params = parseTokens(index + 1, [')'], ',', self.parseParam);
+      local params = parseTokens(
+        index + 1,
+        [')'],
+        ',',
+        function(index)
+          self.parseParam(index, endTokens, inObject)
+      );
       local last = std.reverse(params)[0];
       local cursor =
         if std.length(params) > 0
@@ -742,11 +742,11 @@ local lexer = import './lexer.libsonnet';
         cursor:: cursor + 1,
       },
 
-    parseParam(index):
+    parseParam(index, endTokens, inObject):
       local endTokens = [',', ')'];
-      local id = self.parseExpr(index, endTokens + ['=']);
+      local id = self.parseExpr(index, endTokens + ['='], inObject);
       local hasExpr = lexicon[id.cursor][1] == '=';
-      local expr = self.parseExpr(id.cursor + 1, endTokens);
+      local expr = self.parseExpr(id.cursor + 1, endTokens, inObject);
       local cursor =
         if hasExpr
         then expr.cursor
@@ -758,14 +758,12 @@ local lexer = import './lexer.libsonnet';
         cursor:: cursor,
       },
 
-    parseForspec(index, endTokens):
+    parseForspec(index, endTokens, inObject):
       local token = lexicon[index];
       assert token[1] == 'for' : expmsg('for', token);
-
-      local id = self.parseIdentifier(index + 1);
+      local id = self.parseIdentifier(index + 1, ['in'], inObject);
       assert lexicon[id.cursor][1] == 'in' : expmsg('in', lexicon[id.cursor]);
-
-      local expr = self.parseExpr(id.cursor + 1, endTokens);
+      local expr = self.parseExpr(id.cursor + 1, endTokens, inObject);
       {
         type: 'forspec',
         id: id,
@@ -773,25 +771,20 @@ local lexer = import './lexer.libsonnet';
         cursor:: expr.cursor,
       },
 
-    parseIfspec(index, endTokens):
+    parseIfspec(index, endTokens, inObject):
       local token = lexicon[index];
       assert token[1] == 'if' : expmsg('if', token);
-
-      local expr = self.parseExpr(index + 1, endTokens);
+      local expr = self.parseExpr(index + 1, endTokens, inObject);
       {
         type: 'ifspec',
         expr: expr,
         cursor:: expr.cursor,
       },
 
-    parseCompspec(index, endTokens):
-      local compMap = {
-        'if': this.parseIfspec,
-        'for': this.parseForspec,
-      };
+    parseCompspec(index, endTokens, inObject):
       local items =
         parseTokens(
-          // Doing funky index juggling because parseTokens moves index past splitToken
+          // Doing funky index juggling because parseTokens moves cursor past splitToken
           index + 1,
           endTokens,
           ['for', 'if'],
@@ -800,8 +793,11 @@ local lexer = import './lexer.libsonnet';
             if std.member(endTokens, token[1])
             then { cursor: index }
             else
-              assert std.member(['for', 'if'], token[1]) : expmsg(['for', 'if'], token);
-              compMap[token[1]](index - 1, endTokens + ['for', 'if'])
+              if token[1] == 'for'
+              then self.parseForspec(index - 1, endTokens + ['for', 'if'], inObject)
+              else if token[1] == 'if'
+              then self.parseIfspec(index - 1, endTokens + ['for', 'if'], inObject)
+              else error expmsg(['for', 'if'], token)
         );
       local last = std.reverse(items)[0];
       {
