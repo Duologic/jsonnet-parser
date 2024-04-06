@@ -650,8 +650,8 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseField(index, endTokens, inObject):
-      local expectOp = [':', '::', ':::', '+:', '+::', '+:::'];
-      local fieldname = self.parseFieldname(index, expectOp, inObject);
+      local expectedOperators = [':', '::', ':::', '+:', '+::', '+:::'];
+      local fieldname = self.parseFieldname(index, expectedOperators + ['('], inObject);
 
       local isFunction = (lexicon[fieldname.cursor][1] == '(');
       local params = self.parseParams(fieldname.cursor, endTokens, inObject);
@@ -662,7 +662,7 @@ local lexer = import './lexer.libsonnet';
         else fieldname.cursor;
 
       local operator = lexicon[nextCursor][1];
-      assert std.member(expectOp, operator) : expmsg(std.join('","', expectOp), lexicon[nextCursor]);
+      assert std.member(expectedOperators, operator) : expmsg(std.join('","', expectedOperators), lexicon[nextCursor]);
 
       local additive = std.startsWith(operator, '+');
       local h =
@@ -688,7 +688,7 @@ local lexer = import './lexer.libsonnet';
 
     parseFieldname(index, endTokens, inObject):
       local token = lexicon[index];
-      local expected = [
+      local expectedToken = [
         'IDENTIFIER',
         'STRING_SINGLE',
         'STRING_DOUBLE',
@@ -696,8 +696,12 @@ local lexer = import './lexer.libsonnet';
         'VERBATIM_STRING_DOUBLE',
         'STRING_BLOCK',
       ];
-      if std.member(expected, token[0])
-      then self.parseExpr(index, endTokens, inObject)
+      if std.member(expectedToken, token[0])
+      then
+        local expr = self.parseExpr(index, endTokens, inObject);
+        local expectedTypes = ['string', 'id'];
+        assert std.member(expectedTypes, expr.type) : expmsg(expectedTypes, expr.type);
+        expr
       else self.parseFieldnameExpr(index, endTokens, inObject),
 
     parseFieldnameExpr(index, endTokens, inObject):

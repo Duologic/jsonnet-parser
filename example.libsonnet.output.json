@@ -692,15 +692,15 @@
                         "type": "functioncall"
                      },
                      "fieldname": {
-                        "args": [ ],
-                        "expr": {
-                           "id": "parse",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "id": "parse",
+                        "type": "id"
                      },
                      "h": ":",
-                     "type": "field"
+                     "params": {
+                        "params": [ ],
+                        "type": "params"
+                     },
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -2563,37 +2563,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseExpr",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseExpr",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -2881,37 +2881,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseIdentifier",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseIdentifier",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -3149,37 +3149,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseString",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseString",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -3429,37 +3429,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseVerbatimString",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseVerbatimString",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -3887,37 +3887,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseTextBlock",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseTextBlock",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -4016,37 +4016,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseNumber",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseNumber",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -4400,37 +4400,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseBinary",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "expr",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseBinary",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -4684,37 +4684,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseUnary",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseUnary",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -6271,37 +6271,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseObject",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseObject",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -7176,37 +7176,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseArray",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseArray",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -7425,37 +7425,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseFieldaccess",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "obj",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseFieldaccess",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -8410,37 +8410,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseIndexing",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "obj",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseIndexing",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -9011,37 +9011,37 @@
                         "type": "assertion_expr"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseSuper",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseSuper",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -9679,37 +9679,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseFunctioncall",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "obj",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseFunctioncall",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -10060,37 +10060,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseArg",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseArg",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -10576,37 +10576,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseLocalBind",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseLocalBind",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -11080,37 +11080,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseBind",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseBind",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -11645,37 +11645,37 @@
                         "type": "assertion_expr"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseConditional",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseConditional",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -11799,37 +11799,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseImplicitPlus",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "obj",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseImplicitPlus",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -12078,37 +12078,37 @@
                         "type": "assertion_expr"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseAnonymousFunction",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseAnonymousFunction",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -12394,37 +12394,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseAssertionExpr",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseAssertionExpr",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -12903,37 +12903,37 @@
                         "type": "assertion_expr"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseAssertion",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseAssertion",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -13342,37 +13342,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseImport",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseImport",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -13551,37 +13551,37 @@
                         "type": "assertion_expr"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseErrorExpr",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseErrorExpr",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -13829,37 +13829,37 @@
                         "type": "assertion_expr"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseExprInSuper",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "obj",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseExprInSuper",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -14137,37 +14137,37 @@
                         "type": "assertion_expr"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseParenthesis",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseParenthesis",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -14359,37 +14359,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseMember",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseMember",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -14577,37 +14577,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseObjectLocal",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseObjectLocal",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -14642,7 +14642,7 @@
                               "type": "array"
                            },
                            "id": {
-                              "id": "expectOp",
+                              "id": "expectedOperators",
                               "type": "id"
                            },
                            "type": "bind"
@@ -14660,8 +14660,21 @@
                                     },
                                     {
                                        "expr": {
-                                          "id": "expectOp",
-                                          "type": "id"
+                                          "binaryop": "+",
+                                          "left_expr": {
+                                             "id": "expectedOperators",
+                                             "type": "id"
+                                          },
+                                          "right_expr": {
+                                             "items": [
+                                                {
+                                                   "string": "(",
+                                                   "type": "string"
+                                                }
+                                             ],
+                                             "type": "array"
+                                          },
+                                          "type": "binary"
                                        },
                                        "type": "arg"
                                     },
@@ -14877,7 +14890,7 @@
                                                 "args": [
                                                    {
                                                       "expr": {
-                                                         "id": "expectOp",
+                                                         "id": "expectedOperators",
                                                          "type": "id"
                                                       },
                                                       "type": "arg"
@@ -14919,7 +14932,7 @@
                                                             },
                                                             {
                                                                "expr": {
-                                                                  "id": "expectOp",
+                                                                  "id": "expectedOperators",
                                                                   "type": "id"
                                                                },
                                                                "type": "arg"
@@ -15262,37 +15275,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseField",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseField",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -15348,7 +15361,7 @@
                                  "type": "array"
                               },
                               "id": {
-                                 "id": "expected",
+                                 "id": "expectedToken",
                                  "type": "id"
                               },
                               "type": "bind"
@@ -15397,7 +15410,7 @@
                                  "args": [
                                     {
                                        "expr": {
-                                          "id": "expected",
+                                          "id": "expectedToken",
                                           "type": "id"
                                        },
                                        "type": "arg"
@@ -15435,43 +15448,159 @@
                                  "type": "functioncall"
                               },
                               "then_expr": {
-                                 "args": [
-                                    {
+                                 "bind": {
+                                    "expr": {
+                                       "args": [
+                                          {
+                                             "expr": {
+                                                "id": "index",
+                                                "type": "id"
+                                             },
+                                             "type": "arg"
+                                          },
+                                          {
+                                             "expr": {
+                                                "id": "endTokens",
+                                                "type": "id"
+                                             },
+                                             "type": "arg"
+                                          },
+                                          {
+                                             "expr": {
+                                                "id": "inObject",
+                                                "type": "id"
+                                             },
+                                             "type": "arg"
+                                          }
+                                       ],
                                        "expr": {
-                                          "id": "index",
-                                          "type": "id"
+                                          "exprs": [
+                                             {
+                                                "literal": "self",
+                                                "type": "literal"
+                                             }
+                                          ],
+                                          "id": {
+                                             "id": "parseExpr",
+                                             "type": "id"
+                                          },
+                                          "type": "fieldaccess"
                                        },
-                                       "type": "arg"
+                                       "type": "functioncall"
                                     },
-                                    {
-                                       "expr": {
-                                          "id": "endTokens",
-                                          "type": "id"
-                                       },
-                                       "type": "arg"
-                                    },
-                                    {
-                                       "expr": {
-                                          "id": "inObject",
-                                          "type": "id"
-                                       },
-                                       "type": "arg"
-                                    }
-                                 ],
-                                 "expr": {
-                                    "exprs": [
-                                       {
-                                          "literal": "self",
-                                          "type": "literal"
-                                       }
-                                    ],
                                     "id": {
-                                       "id": "parseExpr",
+                                       "id": "expr",
                                        "type": "id"
                                     },
-                                    "type": "fieldaccess"
+                                    "type": "bind"
                                  },
-                                 "type": "functioncall"
+                                 "expr": {
+                                    "bind": {
+                                       "expr": {
+                                          "items": [
+                                             {
+                                                "string": "string",
+                                                "type": "string"
+                                             },
+                                             {
+                                                "string": "id",
+                                                "type": "string"
+                                             }
+                                          ],
+                                          "type": "array"
+                                       },
+                                       "id": {
+                                          "id": "expectedTypes",
+                                          "type": "id"
+                                       },
+                                       "type": "bind"
+                                    },
+                                    "expr": {
+                                       "assertion": {
+                                          "expr": {
+                                             "args": [
+                                                {
+                                                   "expr": {
+                                                      "id": "expectedTypes",
+                                                      "type": "id"
+                                                   },
+                                                   "type": "arg"
+                                                },
+                                                {
+                                                   "expr": {
+                                                      "exprs": [
+                                                         {
+                                                            "id": "expr",
+                                                            "type": "id"
+                                                         }
+                                                      ],
+                                                      "id": {
+                                                         "id": "type",
+                                                         "type": "id"
+                                                      },
+                                                      "type": "fieldaccess"
+                                                   },
+                                                   "type": "arg"
+                                                }
+                                             ],
+                                             "expr": {
+                                                "exprs": [
+                                                   {
+                                                      "id": "std",
+                                                      "type": "id"
+                                                   }
+                                                ],
+                                                "id": {
+                                                   "id": "member",
+                                                   "type": "id"
+                                                },
+                                                "type": "fieldaccess"
+                                             },
+                                             "type": "functioncall"
+                                          },
+                                          "return_expr": {
+                                             "args": [
+                                                {
+                                                   "expr": {
+                                                      "id": "expectedTypes",
+                                                      "type": "id"
+                                                   },
+                                                   "type": "arg"
+                                                },
+                                                {
+                                                   "expr": {
+                                                      "exprs": [
+                                                         {
+                                                            "id": "expr",
+                                                            "type": "id"
+                                                         }
+                                                      ],
+                                                      "id": {
+                                                         "id": "type",
+                                                         "type": "id"
+                                                      },
+                                                      "type": "fieldaccess"
+                                                   },
+                                                   "type": "arg"
+                                                }
+                                             ],
+                                             "expr": {
+                                                "id": "expmsg",
+                                                "type": "id"
+                                             },
+                                             "type": "functioncall"
+                                          },
+                                          "type": "assertion"
+                                       },
+                                       "expr": {
+                                          "id": "expr",
+                                          "type": "id"
+                                       },
+                                       "type": "assertion_expr"
+                                    },
+                                    "type": "local_bind"
+                                 },
+                                 "type": "local_bind"
                               },
                               "type": "conditional"
                            },
@@ -15480,37 +15609,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseFieldname",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseFieldname",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -15793,37 +15922,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseFieldnameExpr",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseFieldnameExpr",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -16215,37 +16344,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseParams",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseParams",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -16532,37 +16661,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseParam",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseParam",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -16915,37 +17044,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseForspec",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseForspec",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -17129,37 +17258,37 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseIfspec",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseIfspec",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   },
                   {
                      "expr": {
@@ -17705,59 +17834,59 @@
                         "type": "local_bind"
                      },
                      "fieldname": {
-                        "args": [
+                        "id": "parseCompspec",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
                            {
-                              "expr": {
+                              "id": {
                                  "id": "index",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "endTokens",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            },
                            {
-                              "expr": {
+                              "id": {
                                  "id": "inObject",
                                  "type": "id"
                               },
-                              "type": "arg"
+                              "type": "param"
                            }
                         ],
-                        "expr": {
-                           "id": "parseCompspec",
-                           "type": "id"
-                        },
-                        "type": "functioncall"
+                        "type": "params"
                      },
-                     "h": ":",
-                     "type": "field"
+                     "type": "field_function"
                   }
                ],
                "type": "object"
             },
             "fieldname": {
-               "args": [
+               "id": "new",
+               "type": "id"
+            },
+            "h": ":",
+            "params": {
+               "params": [
                   {
-                     "expr": {
+                     "id": {
                         "id": "file",
                         "type": "id"
                      },
-                     "type": "arg"
+                     "type": "param"
                   }
                ],
-               "expr": {
-                  "id": "new",
-                  "type": "id"
-               },
-               "type": "functioncall"
+               "type": "params"
             },
-            "h": ":",
-            "type": "field"
+            "type": "field_function"
          }
       ],
       "type": "object"
