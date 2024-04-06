@@ -148,8 +148,8 @@ local stripLeadingComments(s) =
 
     assert std.length(lastCharIndices) > 0 : 'Unterminated String';
 
-    local value = str[1:lastCharIndices[0]];
-    local lastChar = str[lastCharIndices[0]];
+    local value = str[1:lastCharIndices[0] - 1];
+    local lastChar = str[lastCharIndices[0] - 1];
 
     local tokenName = {
       '"': 'VERBATIM_STRING_DOUBLE',
@@ -164,16 +164,16 @@ local stripLeadingComments(s) =
 
     assert lines[0] == marker : 'Expected "%s" but got "%s"' % [marker, lines[0]];
 
-    local spacesOnFirstLine = lines[1][:std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' '))];
+    local whitespaceOnFirstLine = lines[1][:std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' \t'))];
 
-    assert std.length(spacesOnFirstLine) > 0 : "text block's first line must start with whitespace";
+    assert std.length(whitespaceOnFirstLine) > 0 : "text block's first line must start with whitespace";
 
     local stringlines =
       std.foldl(
         function(acc, line)
           if acc.break
           then acc
-          else if std.startsWith(line, spacesOnFirstLine)
+          else if std.startsWith(line, whitespaceOnFirstLine)
           then acc + { lines+: [line] }
           else acc + { break: true },
         lines[1:],
@@ -183,9 +183,9 @@ local stripLeadingComments(s) =
     local string = std.join('\n', stringlines);
     local endmarkerIndex = std.findSubstr(marker, lines[1 + std.length(stringlines)])[0];
     local endmarker = lines[1 + std.length(stringlines)][:endmarkerIndex + 3];
-    local ending = std.lstripChars(endmarker, ' ');
+    local ending = std.lstripChars(endmarker, ' \t');
 
-    assert ending == marker : 'text block not terminated with ||| ---%s' % std.manifestJson(endmarkerIndex);
+    assert ending == marker : 'text block not terminated with |||';
 
     ['STRING_BLOCK', std.join('\n', [marker, string, endmarker])],
 
@@ -197,18 +197,19 @@ local stripLeadingComments(s) =
 
   lexOperator(str):
     local ops = ['!', '$', ':', '~', '+', '-', '&', '|', '^', '=', '<', '>', '*', '/', '%'];
+    local noEndSequence = ['+', '-', '~', '!', '$'];
     local infunc(s) =
       if s != '' && std.member(ops, s[0])
-      then [s[0]] + infunc(s[1:])
+      then [s[0]]
+           + (if std.length(s) > 2
+                 && !std.member(noEndSequence, s[1])
+              then infunc(s[1:])
+              else [])
       else [];
     local q = std.join('', infunc(str));
 
     assert !std.member(q, '//') : 'The sequence // is not allowed in an operator.';
     assert !std.member(q, '/*') : 'The sequence /* is not allowed in an operator.';
-
-    local noEndSequence = ['+', '-', '~', '!', '$'];
-    assert !(std.length(q) > 1 && std.member(noEndSequence, q[std.length(q) - 1]))
-           : 'If the sequence has more than one character, it is not allowed to end in any of +, -, ~, !, $.';
 
     if q == '$'
     then ['IDENTIFIER', q]

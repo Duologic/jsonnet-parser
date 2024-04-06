@@ -141,9 +141,9 @@ local lexer = import './lexer.libsonnet';
       assert token[0] == 'STRING_BLOCK' : expmsg('STRING_BLOCK', token);
 
       local lines = std.split(tokenValue, '\n');
-      local spacesOnFirstLine = std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' '));
+      local whitespaceOnFirstLine = std.length(lines[1]) - std.length(std.lstripChars(lines[1], ' \t'));
       local string = std.join('\n', [
-        line[spacesOnFirstLine:]
+        line[whitespaceOnFirstLine:]
         for line in lines[1:std.length(lines) - 1]
       ]);
       {
