@@ -24,7 +24,7 @@ local file1 = import './test1.jsonnet';
   assert true,
   assert local b = 'b'; true : 'withReturn',
   someFunction(a='a'):: a,
-  local localFunc(b=true, c) = { a: 'a' } + { b: if b then 'a' + a, c: if c then 'b' else 'e' },
+  local localFunc(b=true, c) = { a: 'a' } { b: if b then 'a' + a, c: if c then 'b' else 'e' },
   nn: localFunc(true, c=false),
 
   local anonyF = function() {},
