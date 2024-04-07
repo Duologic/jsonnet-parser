@@ -182,367 +182,439 @@
                                     "type": "bind"
                                  },
                                  "expr": {
-                                    "bind": {
+                                    "else_expr": {
                                        "expr": {
-                                          "args": [
-                                             {
-                                                "expr": {
-                                                   "id": "index",
-                                                   "type": "id"
-                                                },
-                                                "type": "arg"
-                                             },
-                                             {
-                                                "expr": {
-                                                   "binaryop": "+",
-                                                   "left_expr": {
-                                                      "id": "endTokens",
-                                                      "type": "id"
-                                                   },
-                                                   "right_expr": {
-                                                      "id": "splitTokens",
-                                                      "type": "id"
-                                                   },
-                                                   "type": "binary"
-                                                },
-                                                "type": "arg"
-                                             },
-                                             {
-                                                "expr": {
-                                                   "id": "inObject",
-                                                   "type": "id"
-                                                },
-                                                "type": "arg"
-                                             }
-                                          ],
-                                          "expr": {
-                                             "id": "parseF",
-                                             "type": "id"
-                                          },
-                                          "type": "functioncall"
-                                       },
-                                       "id": {
-                                          "id": "item",
-                                          "type": "id"
-                                       },
-                                       "type": "bind"
-                                    },
-                                    "expr": {
-                                       "bind": {
-                                          "expr": {
+                                          "bind": {
                                              "expr": {
-                                                "id": "lexicon",
-                                                "type": "id"
-                                             },
-                                             "exprs": [
-                                                {
-                                                   "exprs": [
-                                                      {
-                                                         "id": "item",
+                                                "args": [
+                                                   {
+                                                      "expr": {
+                                                         "id": "index",
                                                          "type": "id"
-                                                      }
-                                                   ],
-                                                   "id": {
-                                                      "id": "cursor",
-                                                      "type": "id"
-                                                   },
-                                                   "type": "fieldaccess"
-                                                }
-                                             ],
-                                             "type": "indexing"
-                                          },
-                                          "id": {
-                                             "id": "nextToken",
-                                             "type": "id"
-                                          },
-                                          "type": "bind"
-                                       },
-                                       "expr": {
-                                          "else_expr": {
-                                             "else_expr": {
-                                                "else_expr": {
-                                                   "expr": {
-                                                      "binaryop": "%",
-                                                      "left_expr": {
-                                                         "string": "Expected %s before next item but got \"%s\" : \"%s\"",
-                                                         "type": "string"
                                                       },
-                                                      "right_expr": {
-                                                         "items": [
-                                                            {
-                                                               "args": [
-                                                                  {
-                                                                     "expr": {
-                                                                        "id": "splitTokens",
-                                                                        "type": "id"
-                                                                     },
-                                                                     "type": "arg"
-                                                                  }
-                                                               ],
-                                                               "expr": {
-                                                                  "exprs": [
-                                                                     {
-                                                                        "id": "std",
-                                                                        "type": "id"
-                                                                     }
-                                                                  ],
-                                                                  "id": {
-                                                                     "id": "toString",
-                                                                     "type": "id"
-                                                                  },
-                                                                  "type": "fieldaccess"
-                                                               },
-                                                               "type": "functioncall"
-                                                            },
-                                                            {
-                                                               "id": "token",
-                                                               "type": "id"
-                                                            },
-                                                            {
-                                                               "args": [
-                                                                  {
-                                                                     "expr": {
-                                                                        "id": "item",
-                                                                        "type": "id"
-                                                                     },
-                                                                     "type": "arg"
-                                                                  }
-                                                               ],
-                                                               "expr": {
-                                                                  "exprs": [
-                                                                     {
-                                                                        "id": "std",
-                                                                        "type": "id"
-                                                                     }
-                                                                  ],
-                                                                  "id": {
-                                                                     "id": "toString",
-                                                                     "type": "id"
-                                                                  },
-                                                                  "type": "fieldaccess"
-                                                               },
-                                                               "type": "functioncall"
-                                                            }
-                                                         ],
-                                                         "type": "array"
-                                                      },
-                                                      "type": "binary"
+                                                      "type": "arg"
                                                    },
-                                                   "type": "error_expr"
-                                                },
-                                                "if_expr": {
-                                                   "args": [
-                                                      {
-                                                         "expr": {
+                                                   {
+                                                      "expr": {
+                                                         "binaryop": "+",
+                                                         "left_expr": {
+                                                            "id": "endTokens",
+                                                            "type": "id"
+                                                         },
+                                                         "right_expr": {
                                                             "id": "splitTokens",
                                                             "type": "id"
                                                          },
-                                                         "type": "arg"
+                                                         "type": "binary"
                                                       },
-                                                      {
-                                                         "expr": {
-                                                            "expr": {
-                                                               "id": "nextToken",
-                                                               "type": "id"
-                                                            },
-                                                            "exprs": [
-                                                               {
-                                                                  "number": "1",
-                                                                  "type": "number"
-                                                               }
-                                                            ],
-                                                            "type": "indexing"
-                                                         },
-                                                         "type": "arg"
-                                                      }
-                                                   ],
-                                                   "expr": {
-                                                      "exprs": [
-                                                         {
-                                                            "id": "std",
-                                                            "type": "id"
-                                                         }
-                                                      ],
-                                                      "id": {
-                                                         "id": "member",
+                                                      "type": "arg"
+                                                   },
+                                                   {
+                                                      "expr": {
+                                                         "id": "inObject",
                                                          "type": "id"
                                                       },
-                                                      "type": "fieldaccess"
-                                                   },
-                                                   "type": "functioncall"
+                                                      "type": "arg"
+                                                   }
+                                                ],
+                                                "expr": {
+                                                   "id": "parseF",
+                                                   "type": "id"
                                                 },
-                                                "then_expr": {
-                                                   "binaryop": "+",
+                                                "type": "functioncall"
+                                             },
+                                             "id": {
+                                                "id": "item",
+                                                "type": "id"
+                                             },
+                                             "type": "bind"
+                                          },
+                                          "expr": {
+                                             "assertion": {
+                                                "expr": {
+                                                   "binaryop": ">",
                                                    "left_expr": {
-                                                      "items": [
-                                                         {
-                                                            "binaryop": "+",
-                                                            "left_expr": {
-                                                               "id": "item",
-                                                               "type": "id"
-                                                            },
-                                                            "right_expr": {
-                                                               "members": [
-                                                                  {
-                                                                     "additive": true,
-                                                                     "expr": {
-                                                                        "number": "1",
-                                                                        "type": "number"
-                                                                     },
-                                                                     "fieldname": {
-                                                                        "id": "cursor",
-                                                                        "type": "id"
-                                                                     },
-                                                                     "h": "::",
-                                                                     "type": "field"
-                                                                  }
-                                                               ],
-                                                               "type": "object"
-                                                            },
-                                                            "type": "binary"
-                                                         }
-                                                      ],
-                                                      "type": "array"
-                                                   },
-                                                   "right_expr": {
                                                       "args": [
                                                          {
                                                             "expr": {
-                                                               "binaryop": "+",
-                                                               "left_expr": {
-                                                                  "exprs": [
-                                                                     {
-                                                                        "id": "item",
-                                                                        "type": "id"
-                                                                     }
-                                                                  ],
-                                                                  "id": {
-                                                                     "id": "cursor",
-                                                                     "type": "id"
-                                                                  },
-                                                                  "type": "fieldaccess"
-                                                               },
-                                                               "right_expr": {
-                                                                  "number": "1",
-                                                                  "type": "number"
-                                                               },
-                                                               "type": "binary"
+                                                               "id": "lexicon",
+                                                               "type": "id"
                                                             },
                                                             "type": "arg"
                                                          }
                                                       ],
                                                       "expr": {
-                                                         "id": "infunc",
-                                                         "type": "id"
+                                                         "exprs": [
+                                                            {
+                                                               "id": "std",
+                                                               "type": "id"
+                                                            }
+                                                         ],
+                                                         "id": {
+                                                            "id": "length",
+                                                            "type": "id"
+                                                         },
+                                                         "type": "fieldaccess"
                                                       },
                                                       "type": "functioncall"
                                                    },
+                                                   "right_expr": {
+                                                      "exprs": [
+                                                         {
+                                                            "id": "item",
+                                                            "type": "id"
+                                                         }
+                                                      ],
+                                                      "id": {
+                                                         "id": "cursor",
+                                                         "type": "id"
+                                                      },
+                                                      "type": "fieldaccess"
+                                                   },
                                                    "type": "binary"
                                                 },
-                                                "type": "conditional"
-                                             },
-                                             "if_expr": {
-                                                "args": [
-                                                   {
-                                                      "expr": {
-                                                         "id": "endTokens",
-                                                         "type": "id"
-                                                      },
-                                                      "type": "arg"
+                                                "return_expr": {
+                                                   "binaryop": "%",
+                                                   "left_expr": {
+                                                      "string": "Expected %s before next item but got end of file",
+                                                      "type": "string"
                                                    },
-                                                   {
-                                                      "expr": {
-                                                         "expr": {
-                                                            "id": "nextToken",
-                                                            "type": "id"
-                                                         },
-                                                         "exprs": [
-                                                            {
-                                                               "number": "1",
-                                                               "type": "number"
-                                                            }
-                                                         ],
-                                                         "type": "indexing"
-                                                      },
-                                                      "type": "arg"
-                                                   }
-                                                ],
-                                                "expr": {
-                                                   "exprs": [
-                                                      {
-                                                         "id": "std",
-                                                         "type": "id"
-                                                      }
-                                                   ],
-                                                   "id": {
-                                                      "id": "member",
-                                                      "type": "id"
+                                                   "right_expr": {
+                                                      "items": [
+                                                         {
+                                                            "args": [
+                                                               {
+                                                                  "expr": {
+                                                                     "binaryop": "+",
+                                                                     "left_expr": {
+                                                                        "id": "splitTokens",
+                                                                        "type": "id"
+                                                                     },
+                                                                     "right_expr": {
+                                                                        "id": "endTokens",
+                                                                        "type": "id"
+                                                                     },
+                                                                     "type": "binary"
+                                                                  },
+                                                                  "type": "arg"
+                                                               }
+                                                            ],
+                                                            "expr": {
+                                                               "exprs": [
+                                                                  {
+                                                                     "id": "std",
+                                                                     "type": "id"
+                                                                  }
+                                                               ],
+                                                               "id": {
+                                                                  "id": "toString",
+                                                                  "type": "id"
+                                                               },
+                                                               "type": "fieldaccess"
+                                                            },
+                                                            "type": "functioncall"
+                                                         }
+                                                      ],
+                                                      "type": "array"
                                                    },
-                                                   "type": "fieldaccess"
+                                                   "type": "binary"
                                                 },
-                                                "type": "functioncall"
+                                                "type": "assertion"
                                              },
-                                             "then_expr": {
-                                                "items": [
-                                                   {
-                                                      "id": "item",
-                                                      "type": "id"
-                                                   }
-                                                ],
-                                                "type": "array"
-                                             },
-                                             "type": "conditional"
-                                          },
-                                          "if_expr": {
-                                             "args": [
-                                                {
-                                                   "expr": {
-                                                      "id": "endTokens",
-                                                      "type": "id"
-                                                   },
-                                                   "type": "arg"
-                                                },
-                                                {
+                                             "expr": {
+                                                "bind": {
                                                    "expr": {
                                                       "expr": {
-                                                         "id": "token",
+                                                         "id": "lexicon",
                                                          "type": "id"
                                                       },
                                                       "exprs": [
                                                          {
-                                                            "number": "1",
-                                                            "type": "number"
+                                                            "exprs": [
+                                                               {
+                                                                  "id": "item",
+                                                                  "type": "id"
+                                                               }
+                                                            ],
+                                                            "id": {
+                                                               "id": "cursor",
+                                                               "type": "id"
+                                                            },
+                                                            "type": "fieldaccess"
                                                          }
                                                       ],
                                                       "type": "indexing"
                                                    },
-                                                   "type": "arg"
-                                                }
-                                             ],
-                                             "expr": {
-                                                "exprs": [
-                                                   {
-                                                      "id": "std",
+                                                   "id": {
+                                                      "id": "nextToken",
                                                       "type": "id"
-                                                   }
-                                                ],
-                                                "id": {
-                                                   "id": "member",
+                                                   },
+                                                   "type": "bind"
+                                                },
+                                                "expr": {
+                                                   "else_expr": {
+                                                      "else_expr": {
+                                                         "expr": {
+                                                            "binaryop": "%",
+                                                            "left_expr": {
+                                                               "string": "Expected %s before next item but got \"%s\"",
+                                                               "type": "string"
+                                                            },
+                                                            "right_expr": {
+                                                               "items": [
+                                                                  {
+                                                                     "args": [
+                                                                        {
+                                                                           "expr": {
+                                                                              "id": "splitTokens",
+                                                                              "type": "id"
+                                                                           },
+                                                                           "type": "arg"
+                                                                        }
+                                                                     ],
+                                                                     "expr": {
+                                                                        "exprs": [
+                                                                           {
+                                                                              "id": "std",
+                                                                              "type": "id"
+                                                                           }
+                                                                        ],
+                                                                        "id": {
+                                                                           "id": "toString",
+                                                                           "type": "id"
+                                                                        },
+                                                                        "type": "fieldaccess"
+                                                                     },
+                                                                     "type": "functioncall"
+                                                                  },
+                                                                  {
+                                                                     "id": "token",
+                                                                     "type": "id"
+                                                                  }
+                                                               ],
+                                                               "type": "array"
+                                                            },
+                                                            "type": "binary"
+                                                         },
+                                                         "type": "error_expr"
+                                                      },
+                                                      "if_expr": {
+                                                         "args": [
+                                                            {
+                                                               "expr": {
+                                                                  "id": "splitTokens",
+                                                                  "type": "id"
+                                                               },
+                                                               "type": "arg"
+                                                            },
+                                                            {
+                                                               "expr": {
+                                                                  "expr": {
+                                                                     "id": "nextToken",
+                                                                     "type": "id"
+                                                                  },
+                                                                  "exprs": [
+                                                                     {
+                                                                        "number": "1",
+                                                                        "type": "number"
+                                                                     }
+                                                                  ],
+                                                                  "type": "indexing"
+                                                               },
+                                                               "type": "arg"
+                                                            }
+                                                         ],
+                                                         "expr": {
+                                                            "exprs": [
+                                                               {
+                                                                  "id": "std",
+                                                                  "type": "id"
+                                                               }
+                                                            ],
+                                                            "id": {
+                                                               "id": "member",
+                                                               "type": "id"
+                                                            },
+                                                            "type": "fieldaccess"
+                                                         },
+                                                         "type": "functioncall"
+                                                      },
+                                                      "then_expr": {
+                                                         "binaryop": "+",
+                                                         "left_expr": {
+                                                            "items": [
+                                                               {
+                                                                  "binaryop": "+",
+                                                                  "left_expr": {
+                                                                     "id": "item",
+                                                                     "type": "id"
+                                                                  },
+                                                                  "right_expr": {
+                                                                     "members": [
+                                                                        {
+                                                                           "additive": true,
+                                                                           "expr": {
+                                                                              "number": "1",
+                                                                              "type": "number"
+                                                                           },
+                                                                           "fieldname": {
+                                                                              "id": "cursor",
+                                                                              "type": "id"
+                                                                           },
+                                                                           "h": "::",
+                                                                           "type": "field"
+                                                                        }
+                                                                     ],
+                                                                     "type": "object"
+                                                                  },
+                                                                  "type": "binary"
+                                                               }
+                                                            ],
+                                                            "type": "array"
+                                                         },
+                                                         "right_expr": {
+                                                            "args": [
+                                                               {
+                                                                  "expr": {
+                                                                     "binaryop": "+",
+                                                                     "left_expr": {
+                                                                        "exprs": [
+                                                                           {
+                                                                              "id": "item",
+                                                                              "type": "id"
+                                                                           }
+                                                                        ],
+                                                                        "id": {
+                                                                           "id": "cursor",
+                                                                           "type": "id"
+                                                                        },
+                                                                        "type": "fieldaccess"
+                                                                     },
+                                                                     "right_expr": {
+                                                                        "number": "1",
+                                                                        "type": "number"
+                                                                     },
+                                                                     "type": "binary"
+                                                                  },
+                                                                  "type": "arg"
+                                                               }
+                                                            ],
+                                                            "expr": {
+                                                               "id": "infunc",
+                                                               "type": "id"
+                                                            },
+                                                            "type": "functioncall"
+                                                         },
+                                                         "type": "binary"
+                                                      },
+                                                      "type": "conditional"
+                                                   },
+                                                   "if_expr": {
+                                                      "args": [
+                                                         {
+                                                            "expr": {
+                                                               "id": "endTokens",
+                                                               "type": "id"
+                                                            },
+                                                            "type": "arg"
+                                                         },
+                                                         {
+                                                            "expr": {
+                                                               "expr": {
+                                                                  "id": "nextToken",
+                                                                  "type": "id"
+                                                               },
+                                                               "exprs": [
+                                                                  {
+                                                                     "number": "1",
+                                                                     "type": "number"
+                                                                  }
+                                                               ],
+                                                               "type": "indexing"
+                                                            },
+                                                            "type": "arg"
+                                                         }
+                                                      ],
+                                                      "expr": {
+                                                         "exprs": [
+                                                            {
+                                                               "id": "std",
+                                                               "type": "id"
+                                                            }
+                                                         ],
+                                                         "id": {
+                                                            "id": "member",
+                                                            "type": "id"
+                                                         },
+                                                         "type": "fieldaccess"
+                                                      },
+                                                      "type": "functioncall"
+                                                   },
+                                                   "then_expr": {
+                                                      "items": [
+                                                         {
+                                                            "id": "item",
+                                                            "type": "id"
+                                                         }
+                                                      ],
+                                                      "type": "array"
+                                                   },
+                                                   "type": "conditional"
+                                                },
+                                                "type": "local_bind"
+                                             },
+                                             "type": "assertion_expr"
+                                          },
+                                          "type": "local_bind"
+                                       },
+                                       "type": "parenthesis"
+                                    },
+                                    "if_expr": {
+                                       "args": [
+                                          {
+                                             "expr": {
+                                                "id": "endTokens",
+                                                "type": "id"
+                                             },
+                                             "type": "arg"
+                                          },
+                                          {
+                                             "expr": {
+                                                "expr": {
+                                                   "id": "token",
                                                    "type": "id"
                                                 },
-                                                "type": "fieldaccess"
+                                                "exprs": [
+                                                   {
+                                                      "number": "1",
+                                                      "type": "number"
+                                                   }
+                                                ],
+                                                "type": "indexing"
                                              },
-                                             "type": "functioncall"
+                                             "type": "arg"
+                                          }
+                                       ],
+                                       "expr": {
+                                          "exprs": [
+                                             {
+                                                "id": "std",
+                                                "type": "id"
+                                             }
+                                          ],
+                                          "id": {
+                                             "id": "member",
+                                             "type": "id"
                                           },
-                                          "then_expr": {
-                                             "items": [ ],
-                                             "type": "array"
-                                          },
-                                          "type": "conditional"
+                                          "type": "fieldaccess"
                                        },
-                                       "type": "local_bind"
+                                       "type": "functioncall"
                                     },
-                                    "type": "local_bind"
+                                    "then_expr": {
+                                       "items": [ ],
+                                       "type": "array"
+                                    },
+                                    "type": "conditional"
                                  },
                                  "type": "local_bind"
                               },
@@ -1909,40 +1981,132 @@
                                                          "else_expr": {
                                                             "else_expr": {
                                                                "else_expr": {
-                                                                  "expr": {
-                                                                     "binaryop": "%",
-                                                                     "left_expr": {
-                                                                        "string": "Unexpected token: \"%s\"",
-                                                                        "type": "string"
-                                                                     },
-                                                                     "right_expr": {
-                                                                        "args": [
-                                                                           {
+                                                                  "else_expr": {
+                                                                     "expr": {
+                                                                        "binaryop": "%",
+                                                                        "left_expr": {
+                                                                           "string": "Unexpected token: \"%s\"",
+                                                                           "type": "string"
+                                                                        },
+                                                                        "right_expr": {
+                                                                           "binaryop": "+",
+                                                                           "left_expr": {
+                                                                              "args": [
+                                                                                 {
+                                                                                    "expr": {
+                                                                                       "id": "token",
+                                                                                       "type": "id"
+                                                                                    },
+                                                                                    "type": "arg"
+                                                                                 }
+                                                                              ],
                                                                               "expr": {
-                                                                                 "id": "token",
-                                                                                 "type": "id"
+                                                                                 "exprs": [
+                                                                                    {
+                                                                                       "id": "std",
+                                                                                       "type": "id"
+                                                                                    }
+                                                                                 ],
+                                                                                 "id": {
+                                                                                    "id": "toString",
+                                                                                    "type": "id"
+                                                                                 },
+                                                                                 "type": "fieldaccess"
                                                                               },
-                                                                              "type": "arg"
+                                                                              "type": "functioncall"
+                                                                           },
+                                                                           "right_expr": {
+                                                                              "args": [
+                                                                                 {
+                                                                                    "expr": {
+                                                                                       "id": "endTokens",
+                                                                                       "type": "id"
+                                                                                    },
+                                                                                    "type": "arg"
+                                                                                 }
+                                                                              ],
+                                                                              "expr": {
+                                                                                 "exprs": [
+                                                                                    {
+                                                                                       "id": "std",
+                                                                                       "type": "id"
+                                                                                    }
+                                                                                 ],
+                                                                                 "id": {
+                                                                                    "id": "toString",
+                                                                                    "type": "id"
+                                                                                 },
+                                                                                 "type": "fieldaccess"
+                                                                              },
+                                                                              "type": "functioncall"
+                                                                           },
+                                                                           "type": "binary"
+                                                                        },
+                                                                        "type": "binary"
+                                                                     },
+                                                                     "type": "error_expr"
+                                                                  },
+                                                                  "if_expr": {
+                                                                     "binaryop": "==",
+                                                                     "left_expr": {
+                                                                        "expr": {
+                                                                           "id": "token",
+                                                                           "type": "id"
+                                                                        },
+                                                                        "exprs": [
+                                                                           {
+                                                                              "number": "1",
+                                                                              "type": "number"
                                                                            }
                                                                         ],
-                                                                        "expr": {
-                                                                           "exprs": [
-                                                                              {
-                                                                                 "id": "std",
-                                                                                 "type": "id"
-                                                                              }
-                                                                           ],
-                                                                           "id": {
-                                                                              "id": "toString",
-                                                                              "type": "id"
-                                                                           },
-                                                                           "type": "fieldaccess"
-                                                                        },
-                                                                        "type": "functioncall"
+                                                                        "type": "indexing"
+                                                                     },
+                                                                     "right_expr": {
+                                                                        "string": "tailstrict",
+                                                                        "type": "string"
                                                                      },
                                                                      "type": "binary"
                                                                   },
-                                                                  "type": "error_expr"
+                                                                  "then_expr": {
+                                                                     "args": [
+                                                                        {
+                                                                           "expr": {
+                                                                              "id": "obj",
+                                                                              "type": "id"
+                                                                           },
+                                                                           "type": "arg"
+                                                                        },
+                                                                        {
+                                                                           "expr": {
+                                                                              "id": "endTokens",
+                                                                              "type": "id"
+                                                                           },
+                                                                           "type": "arg"
+                                                                        },
+                                                                        {
+                                                                           "expr": {
+                                                                              "id": "inObject",
+                                                                              "type": "id"
+                                                                           },
+                                                                           "type": "arg"
+                                                                        }
+                                                                     ],
+                                                                     "expr": {
+                                                                        "exprs": [
+                                                                           {
+                                                                              "literal": "self",
+                                                                              "type": "literal"
+                                                                           }
+                                                                        ],
+                                                                        "id": {
+                                                                           "id": "parseTailstrict",
+                                                                           "type": "id"
+                                                                        },
+                                                                        "type": "fieldaccess"
+                                                                     },
+                                                                     "type": "functioncall"
+                                                                  },
+                                                                  "type": "conditional"
                                                                },
                                                                "if_expr": {
                                                                   "binaryop": "==",
@@ -3653,7 +3817,7 @@
                                                          },
                                                          {
                                                             "expr": {
-                                                               "string": " ",
+                                                               "string": " \\t",
                                                                "type": "string"
                                                             },
                                                             "type": "arg"
@@ -3695,7 +3859,7 @@
                                           "type": "binary"
                                        },
                                        "id": {
-                                          "id": "spacesOnFirstLine",
+                                          "id": "whitespaceOnFirstLine",
                                           "type": "id"
                                        },
                                        "type": "bind"
@@ -3720,7 +3884,7 @@
                                                          },
                                                          "exprs": [
                                                             {
-                                                               "id": "spacesOnFirstLine",
+                                                               "id": "whitespaceOnFirstLine",
                                                                "type": "id"
                                                             },
                                                             {
@@ -5366,7 +5530,7 @@
                                                                                  "type": "id"
                                                                               },
                                                                               "right_expr": {
-                                                                                 "binaryop": ">",
+                                                                                 "binaryop": "!=",
                                                                                  "left_expr": {
                                                                                     "args": [
                                                                                        {
@@ -9775,46 +9939,89 @@
                         "expr": {
                            "bind": {
                               "expr": {
-                                 "expr": {
-                                    "binaryop": "==",
+                                 "binaryop": "<",
+                                 "left_expr": {
+                                    "exprs": [
+                                       {
+                                          "id": "expr",
+                                          "type": "id"
+                                       }
+                                    ],
+                                    "id": {
+                                       "id": "cursor",
+                                       "type": "id"
+                                    },
+                                    "type": "fieldaccess"
+                                 },
+                                 "right_expr": {
+                                    "binaryop": "&&",
                                     "left_expr": {
+                                       "args": [
+                                          {
+                                             "expr": {
+                                                "id": "lexicon",
+                                                "type": "id"
+                                             },
+                                             "type": "arg"
+                                          }
+                                       ],
                                        "expr": {
-                                          "expr": {
-                                             "id": "lexicon",
+                                          "exprs": [
+                                             {
+                                                "id": "std",
+                                                "type": "id"
+                                             }
+                                          ],
+                                          "id": {
+                                             "id": "length",
                                              "type": "id"
+                                          },
+                                          "type": "fieldaccess"
+                                       },
+                                       "type": "functioncall"
+                                    },
+                                    "right_expr": {
+                                       "binaryop": "==",
+                                       "left_expr": {
+                                          "expr": {
+                                             "expr": {
+                                                "id": "lexicon",
+                                                "type": "id"
+                                             },
+                                             "exprs": [
+                                                {
+                                                   "exprs": [
+                                                      {
+                                                         "id": "expr",
+                                                         "type": "id"
+                                                      }
+                                                   ],
+                                                   "id": {
+                                                      "id": "cursor",
+                                                      "type": "id"
+                                                   },
+                                                   "type": "fieldaccess"
+                                                }
+                                             ],
+                                             "type": "indexing"
                                           },
                                           "exprs": [
                                              {
-                                                "exprs": [
-                                                   {
-                                                      "id": "expr",
-                                                      "type": "id"
-                                                   }
-                                                ],
-                                                "id": {
-                                                   "id": "cursor",
-                                                   "type": "id"
-                                                },
-                                                "type": "fieldaccess"
+                                                "number": "1",
+                                                "type": "number"
                                              }
                                           ],
                                           "type": "indexing"
                                        },
-                                       "exprs": [
-                                          {
-                                             "number": "1",
-                                             "type": "number"
-                                          }
-                                       ],
-                                       "type": "indexing"
-                                    },
-                                    "right_expr": {
-                                       "string": "=",
-                                       "type": "string"
+                                       "right_expr": {
+                                          "string": "=",
+                                          "type": "string"
+                                       },
+                                       "type": "binary"
                                     },
                                     "type": "binary"
                                  },
-                                 "type": "parenthesis"
+                                 "type": "binary"
                               },
                               "id": {
                                  "id": "hasExpr",
@@ -9934,8 +10141,7 @@
                                     "type": "bind"
                                  },
                                  "expr": {
-                                    "binaryop": "+",
-                                    "left_expr": {
+                                    "else_expr": {
                                        "members": [
                                           {
                                              "expr": {
@@ -9985,71 +10191,73 @@
                                        ],
                                        "type": "object"
                                     },
-                                    "right_expr": {
-                                       "expr": {
-                                          "else_expr": {
-                                             "members": [ ],
-                                             "type": "object"
+                                    "if_expr": {
+                                       "id": "hasExpr",
+                                       "type": "id"
+                                    },
+                                    "then_expr": {
+                                       "members": [
+                                          {
+                                             "expr": {
+                                                "string": "arg",
+                                                "type": "string"
+                                             },
+                                             "fieldname": {
+                                                "id": "type",
+                                                "type": "id"
+                                             },
+                                             "h": ":",
+                                             "type": "field"
                                           },
-                                          "if_expr": {
-                                             "id": "hasExpr",
-                                             "type": "id"
+                                          {
+                                             "expr": {
+                                                "id": "id",
+                                                "type": "id"
+                                             },
+                                             "fieldname": {
+                                                "id": "id",
+                                                "type": "id"
+                                             },
+                                             "h": ":",
+                                             "type": "field"
                                           },
-                                          "then_expr": {
-                                             "members": [
-                                                {
-                                                   "expr": {
-                                                      "id": "id",
-                                                      "type": "id"
-                                                   },
-                                                   "fieldname": {
-                                                      "id": "id",
-                                                      "type": "id"
-                                                   },
-                                                   "h": ":",
-                                                   "type": "field"
-                                                },
-                                                {
-                                                   "expr": {
+                                          {
+                                             "expr": {
+                                                "id": "exprValue",
+                                                "type": "id"
+                                             },
+                                             "fieldname": {
+                                                "id": "expr",
+                                                "type": "id"
+                                             },
+                                             "h": ":",
+                                             "type": "field"
+                                          },
+                                          {
+                                             "expr": {
+                                                "exprs": [
+                                                   {
                                                       "id": "exprValue",
                                                       "type": "id"
-                                                   },
-                                                   "fieldname": {
-                                                      "id": "expr",
-                                                      "type": "id"
-                                                   },
-                                                   "h": ":",
-                                                   "type": "field"
+                                                   }
+                                                ],
+                                                "id": {
+                                                   "id": "cursor",
+                                                   "type": "id"
                                                 },
-                                                {
-                                                   "expr": {
-                                                      "exprs": [
-                                                         {
-                                                            "id": "exprValue",
-                                                            "type": "id"
-                                                         }
-                                                      ],
-                                                      "id": {
-                                                         "id": "cursor",
-                                                         "type": "id"
-                                                      },
-                                                      "type": "fieldaccess"
-                                                   },
-                                                   "fieldname": {
-                                                      "id": "cursor",
-                                                      "type": "id"
-                                                   },
-                                                   "h": "::",
-                                                   "type": "field"
-                                                }
-                                             ],
-                                             "type": "object"
-                                          },
-                                          "type": "conditional"
-                                       },
-                                       "type": "parenthesis"
+                                                "type": "fieldaccess"
+                                             },
+                                             "fieldname": {
+                                                "id": "cursor",
+                                                "type": "id"
+                                             },
+                                             "h": "::",
+                                             "type": "field"
+                                          }
+                                       ],
+                                       "type": "object"
                                     },
-                                    "type": "binary"
+                                    "type": "conditional"
                                  },
                                  "type": "local_bind"
                               },
@@ -11403,46 +11611,89 @@
                                  "expr": {
                                     "bind": {
                                        "expr": {
-                                          "expr": {
-                                             "binaryop": "==",
+                                          "binaryop": "<",
+                                          "left_expr": {
+                                             "exprs": [
+                                                {
+                                                   "id": "thenExpr",
+                                                   "type": "id"
+                                                }
+                                             ],
+                                             "id": {
+                                                "id": "cursor",
+                                                "type": "id"
+                                             },
+                                             "type": "fieldaccess"
+                                          },
+                                          "right_expr": {
+                                             "binaryop": "&&",
                                              "left_expr": {
+                                                "args": [
+                                                   {
+                                                      "expr": {
+                                                         "id": "lexicon",
+                                                         "type": "id"
+                                                      },
+                                                      "type": "arg"
+                                                   }
+                                                ],
                                                 "expr": {
-                                                   "expr": {
-                                                      "id": "lexicon",
+                                                   "exprs": [
+                                                      {
+                                                         "id": "std",
+                                                         "type": "id"
+                                                      }
+                                                   ],
+                                                   "id": {
+                                                      "id": "length",
                                                       "type": "id"
+                                                   },
+                                                   "type": "fieldaccess"
+                                                },
+                                                "type": "functioncall"
+                                             },
+                                             "right_expr": {
+                                                "binaryop": "==",
+                                                "left_expr": {
+                                                   "expr": {
+                                                      "expr": {
+                                                         "id": "lexicon",
+                                                         "type": "id"
+                                                      },
+                                                      "exprs": [
+                                                         {
+                                                            "exprs": [
+                                                               {
+                                                                  "id": "thenExpr",
+                                                                  "type": "id"
+                                                               }
+                                                            ],
+                                                            "id": {
+                                                               "id": "cursor",
+                                                               "type": "id"
+                                                            },
+                                                            "type": "fieldaccess"
+                                                         }
+                                                      ],
+                                                      "type": "indexing"
                                                    },
                                                    "exprs": [
                                                       {
-                                                         "exprs": [
-                                                            {
-                                                               "id": "thenExpr",
-                                                               "type": "id"
-                                                            }
-                                                         ],
-                                                         "id": {
-                                                            "id": "cursor",
-                                                            "type": "id"
-                                                         },
-                                                         "type": "fieldaccess"
+                                                         "number": "1",
+                                                         "type": "number"
                                                       }
                                                    ],
                                                    "type": "indexing"
                                                 },
-                                                "exprs": [
-                                                   {
-                                                      "number": "1",
-                                                      "type": "number"
-                                                   }
-                                                ],
-                                                "type": "indexing"
-                                             },
-                                             "right_expr": {
-                                                "string": "else",
-                                                "type": "string"
+                                                "right_expr": {
+                                                   "string": "else",
+                                                   "type": "string"
+                                                },
+                                                "type": "binary"
                                              },
                                              "type": "binary"
                                           },
-                                          "type": "parenthesis"
+                                          "type": "binary"
                                        },
                                        "id": {
                                           "id": "hasElseExpr",
@@ -13132,43 +13383,41 @@
                                              "type": "binary"
                                           },
                                           "return_expr": {
-                                             "binaryop": "+",
-                                             "left_expr": {
-                                                "string": "Block string literal not allowed for imports ",
-                                                "type": "string"
-                                             },
-                                             "right_expr": {
-                                                "id": "nextToken",
-                                                "type": "id"
-                                             },
-                                             "type": "binary"
+                                             "string": "Block string literal not allowed for imports",
+                                             "type": "string"
                                           },
                                           "type": "assertion"
                                        },
                                        "expr": {
-                                          "assertion": {
+                                          "bind": {
                                              "expr": {
                                                 "args": [
                                                    {
                                                       "expr": {
-                                                         "id": "expected",
+                                                         "binaryop": "+",
+                                                         "left_expr": {
+                                                            "id": "index",
+                                                            "type": "id"
+                                                         },
+                                                         "right_expr": {
+                                                            "number": "1",
+                                                            "type": "number"
+                                                         },
+                                                         "type": "binary"
+                                                      },
+                                                      "type": "arg"
+                                                   },
+                                                   {
+                                                      "expr": {
+                                                         "id": "endTokens",
                                                          "type": "id"
                                                       },
                                                       "type": "arg"
                                                    },
                                                    {
                                                       "expr": {
-                                                         "expr": {
-                                                            "id": "nextToken",
-                                                            "type": "id"
-                                                         },
-                                                         "exprs": [
-                                                            {
-                                                               "number": "0",
-                                                               "type": "number"
-                                                            }
-                                                         ],
-                                                         "type": "indexing"
+                                                         "id": "inObject",
+                                                         "type": "id"
                                                       },
                                                       "type": "arg"
                                                    }
@@ -13176,54 +13425,48 @@
                                                 "expr": {
                                                    "exprs": [
                                                       {
-                                                         "id": "std",
-                                                         "type": "id"
+                                                         "literal": "self",
+                                                         "type": "literal"
                                                       }
                                                    ],
                                                    "id": {
-                                                      "id": "member",
+                                                      "id": "parseExpr",
                                                       "type": "id"
                                                    },
                                                    "type": "fieldaccess"
                                                 },
                                                 "type": "functioncall"
                                              },
-                                             "return_expr": {
-                                                "string": "Computed imports are not allowed",
-                                                "type": "string"
+                                             "id": {
+                                                "id": "path",
+                                                "type": "id"
                                              },
-                                             "type": "assertion"
+                                             "type": "bind"
                                           },
                                           "expr": {
-                                             "bind": {
+                                             "assertion": {
                                                 "expr": {
                                                    "args": [
                                                       {
                                                          "expr": {
-                                                            "binaryop": "+",
-                                                            "left_expr": {
-                                                               "id": "index",
+                                                            "exprs": [
+                                                               {
+                                                                  "id": "path",
+                                                                  "type": "id"
+                                                               }
+                                                            ],
+                                                            "id": {
+                                                               "id": "type",
                                                                "type": "id"
                                                             },
-                                                            "right_expr": {
-                                                               "number": "1",
-                                                               "type": "number"
-                                                            },
-                                                            "type": "binary"
+                                                            "type": "fieldaccess"
                                                          },
                                                          "type": "arg"
                                                       },
                                                       {
                                                          "expr": {
-                                                            "id": "endTokens",
-                                                            "type": "id"
-                                                         },
-                                                         "type": "arg"
-                                                      },
-                                                      {
-                                                         "expr": {
-                                                            "id": "inObject",
-                                                            "type": "id"
+                                                            "string": "string",
+                                                            "type": "string"
                                                          },
                                                          "type": "arg"
                                                       }
@@ -13231,23 +13474,23 @@
                                                    "expr": {
                                                       "exprs": [
                                                          {
-                                                            "literal": "self",
-                                                            "type": "literal"
+                                                            "id": "std",
+                                                            "type": "id"
                                                          }
                                                       ],
                                                       "id": {
-                                                         "id": "parseExpr",
+                                                         "id": "member",
                                                          "type": "id"
                                                       },
                                                       "type": "fieldaccess"
                                                    },
                                                    "type": "functioncall"
                                                 },
-                                                "id": {
-                                                   "id": "path",
-                                                   "type": "id"
+                                                "return_expr": {
+                                                   "string": "Computed imports are not allowed",
+                                                   "type": "string"
                                                 },
-                                                "type": "bind"
+                                                "type": "assertion"
                                              },
                                              "expr": {
                                                 "members": [
@@ -13325,9 +13568,9 @@
                                                 ],
                                                 "type": "object"
                                              },
-                                             "type": "local_bind"
+                                             "type": "assertion_expr"
                                           },
-                                          "type": "assertion_expr"
+                                          "type": "local_bind"
                                        },
                                        "type": "assertion_expr"
                                     },
@@ -14146,6 +14389,184 @@
                            {
                               "id": {
                                  "id": "index",
+                                 "type": "id"
+                              },
+                              "type": "param"
+                           },
+                           {
+                              "id": {
+                                 "id": "endTokens",
+                                 "type": "id"
+                              },
+                              "type": "param"
+                           },
+                           {
+                              "id": {
+                                 "id": "inObject",
+                                 "type": "id"
+                              },
+                              "type": "param"
+                           }
+                        ],
+                        "type": "params"
+                     },
+                     "type": "field_function"
+                  },
+                  {
+                     "expr": {
+                        "assertion": {
+                           "expr": {
+                              "binaryop": "==",
+                              "left_expr": {
+                                 "expr": {
+                                    "expr": {
+                                       "id": "lexicon",
+                                       "type": "id"
+                                    },
+                                    "exprs": [
+                                       {
+                                          "exprs": [
+                                             {
+                                                "id": "obj",
+                                                "type": "id"
+                                             }
+                                          ],
+                                          "id": {
+                                             "id": "cursor",
+                                             "type": "id"
+                                          },
+                                          "type": "fieldaccess"
+                                       }
+                                    ],
+                                    "type": "indexing"
+                                 },
+                                 "exprs": [
+                                    {
+                                       "number": "1",
+                                       "type": "number"
+                                    }
+                                 ],
+                                 "type": "indexing"
+                              },
+                              "right_expr": {
+                                 "string": "tailstrict",
+                                 "type": "string"
+                              },
+                              "type": "binary"
+                           },
+                           "return_expr": {
+                              "args": [
+                                 {
+                                    "expr": {
+                                       "string": "tailstrict",
+                                       "type": "string"
+                                    },
+                                    "type": "arg"
+                                 },
+                                 {
+                                    "expr": {
+                                       "expr": {
+                                          "id": "lexicon",
+                                          "type": "id"
+                                       },
+                                       "exprs": [
+                                          {
+                                             "exprs": [
+                                                {
+                                                   "id": "obj",
+                                                   "type": "id"
+                                                }
+                                             ],
+                                             "id": {
+                                                "id": "cursor",
+                                                "type": "id"
+                                             },
+                                             "type": "fieldaccess"
+                                          }
+                                       ],
+                                       "type": "indexing"
+                                    },
+                                    "type": "arg"
+                                 }
+                              ],
+                              "expr": {
+                                 "id": "expmsg",
+                                 "type": "id"
+                              },
+                              "type": "functioncall"
+                           },
+                           "type": "assertion"
+                        },
+                        "expr": {
+                           "members": [
+                              {
+                                 "expr": {
+                                    "string": "tailstrict",
+                                    "type": "string"
+                                 },
+                                 "fieldname": {
+                                    "id": "type",
+                                    "type": "id"
+                                 },
+                                 "h": ":",
+                                 "type": "field"
+                              },
+                              {
+                                 "expr": {
+                                    "id": "obj",
+                                    "type": "id"
+                                 },
+                                 "fieldname": {
+                                    "id": "expr",
+                                    "type": "id"
+                                 },
+                                 "h": ":",
+                                 "type": "field"
+                              },
+                              {
+                                 "expr": {
+                                    "binaryop": "+",
+                                    "left_expr": {
+                                       "exprs": [
+                                          {
+                                             "id": "obj",
+                                             "type": "id"
+                                          }
+                                       ],
+                                       "id": {
+                                          "id": "cursor",
+                                          "type": "id"
+                                       },
+                                       "type": "fieldaccess"
+                                    },
+                                    "right_expr": {
+                                       "number": "1",
+                                       "type": "number"
+                                    },
+                                    "type": "binary"
+                                 },
+                                 "fieldname": {
+                                    "id": "cursor",
+                                    "type": "id"
+                                 },
+                                 "h": "::",
+                                 "type": "field"
+                              }
+                           ],
+                           "type": "object"
+                        },
+                        "type": "assertion_expr"
+                     },
+                     "fieldname": {
+                        "id": "parseTailstrict",
+                        "type": "id"
+                     },
+                     "h": ":",
+                     "params": {
+                        "params": [
+                           {
+                              "id": {
+                                 "id": "obj",
                                  "type": "id"
                               },
                               "type": "param"

@@ -83,20 +83,65 @@ local stripLeadingComments(s) =
     else [],
 
   lexNumber(str):
-    if !isNumber(str[0])
+    if !xtd.ascii.isNumber(str[0])
     then []
     else
-      local s = ['-', '+', '.', 'e', 'E'];
+      local leadingZeros =
+        local f(index=0, return='') =
+          if index < std.length(str) && str[index] == '0'
+          then f(index + 1, return + str[index])
+          else return;
+        f();
+
+      local validateAfterChar = {
+        '-': xtd.ascii.isNumber,
+        '+': xtd.ascii.isNumber,
+        '.': xtd.ascii.isNumber,
+        e: function(c) std.member(['+', '-'], c) || xtd.ascii.isNumber(c),
+        E: self.e,
+      };
+
       local aux(index=0, return='') =
-        if index < std.length(str) && xtd.ascii.isStringJSONNumeric(return + str[index])
-        then aux(index + 1, return + str[index])
-        else if index + 1 < std.length(str) && std.member(s, str[index])
-        then aux(index + 1, return + str[index])
-        else if index + 1 <= std.length(str) && std.member(s, str[index])
-        then error "Couldn't lex number, junk after %s" % str[index]
+        if index < std.length(str)
+        then
+          if xtd.ascii.isStringJSONNumeric(return + str[index])
+          then aux(index + 1, return + str[index])
+
+          else if str[index] == '.'
+          then
+            if index + 1 < std.length(str)
+               && xtd.ascii.isNumber(str[index + 1])
+            then aux(index + 1, return + str[index])
+            else error "Couldn't lex number, junk after decimal point: '%s'" % str[index + 1]
+
+          else if str[index] == 'e' || str[index] == 'e'
+          then
+            if index + 1 < std.length(str)
+               && xtd.ascii.isNumber(str[index + 1])
+               || str[index + 1] == '-'
+               || str[index + 1] == '+'
+            then aux(index + 1, return + str[index])
+            else error "Couldn't lex number, junk after 'E': '%s'" % str[index + 1]
+
+          // if return was not an exponent, then signs will become operators
+          else if std.length(return) > 0 && (str[index] == '-' || str[index] == '+')
+                  && (return[std.length(return) - 1] == 'e' || return[std.length(return) - 1] == 'e')
+          then
+            if index + 1 < std.length(str)
+               && xtd.ascii.isNumber(str[index + 1])
+            then aux(index + 1, return + str[index])
+            else error "Couldn't lex number, junk after exponent sign: '%s'" % str[index + 1]
+          else return
         else return;
 
-      local value = aux();
+
+      local value =
+        if std.length(leadingZeros) > 0
+           && std.length(str) > std.length(leadingZeros)
+           && std.member(std.objectFields(validateAfterChar), str[std.length(leadingZeros)])
+        then leadingZeros[1:] + aux(std.length(leadingZeros) - 1)
+        else leadingZeros + aux(std.length(leadingZeros));
+
       if value != ''
       then ['NUMBER', value]
       else [],
@@ -143,13 +188,13 @@ local stripLeadingComments(s) =
     local startChar = str[1];
     assert std.member(['"', "'"], startChar) : 'Expected \' or " but got %s' % startChar;
 
-    local sub = std.strReplace(str[2:], startChar + startChar, std.char(7));  // replace with BEL character to avoid matching
-    local lastCharIndices = std.map(function(i) i + 3, std.findSubstr(startChar, sub));
+    local sub = std.strReplace(str[2:], startChar + startChar, std.char(7) + std.char(7));  // replace with BEL character to avoid matching lastChar
+    local lastCharIndices = std.map(function(i) i + 2, std.findSubstr(startChar, sub));
 
     assert std.length(lastCharIndices) > 0 : 'Unterminated String';
 
-    local value = str[1:lastCharIndices[0] - 1];
-    local lastChar = str[lastCharIndices[0] - 1];
+    local value = str[2:lastCharIndices[0]];
+    local lastChar = str[lastCharIndices[0]];
 
     local tokenName = {
       '"': 'VERBATIM_STRING_DOUBLE',
@@ -232,6 +277,7 @@ local stripLeadingComments(s) =
           self.lexOperator(str),
         ]
       );
+      //local value = std.trace(std.manifestJson(prev), lexicons)[0][1];
       local value = lexicons[0][1];
       assert std.length(lexicons) == 1 : 'Cannot lex: "%s"' % std.manifestJson(prev);
       assert value != '' : 'Cannot lex: "%s"' % str;
