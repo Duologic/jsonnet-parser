@@ -211,7 +211,7 @@ local lexer = import './lexer.libsonnet';
         '~',
       ];
       local token = lexicon[index];
-      assert std.member(unaryoperators, token[1]) : 'Not a unary operator: ' + token[1];
+      assert std.member(unaryoperators, token[1]) : 'Not a unary operator: ' + std.toString(token);
       local expr = self.parseExpr(index + 1, endTokens, inObject);
       {
         type: 'unary',
@@ -359,28 +359,54 @@ local lexer = import './lexer.libsonnet';
         literal: '',
         cursor:: cursor,
       };
-      local parseExprs(index) =
-        local token = lexicon[index];
-        local prevToken = lexicon[index - 1];
-        local expr = self.parseExpr(index, [endToken] + [':', '::'], inObject);
-        if token[1] == ']'
-        then []
-        else if token[1] == ':' && prevToken[0] != 'OPERATOR'
-        then [literal(index + 1)] + parseExprs(index + 1)
-        else if token[1] == '::' && prevToken[0] != 'OPERATOR'
-        then [literal(index + 1), literal(index + 1)] + parseExprs(index + 1)
-        else [expr] + parseExprs(expr.cursor);
 
-      local exprs = parseExprs(obj.cursor + 1);
+      local nextToken = lexicon[obj.cursor + 1];
+      assert nextToken[1] != ']' : 'Indexing requires an expression';
 
-      assert std.length(exprs) != 0 : 'Indexing requires an expression';
+      local hasStart = nextToken[1][0] != ':';
+      local startExpr =
+        if lexicon[obj.cursor + 1][1][0] != ':'
+        then self.parseExpr(obj.cursor + 1, [']', ':', '::'], inObject)
+        else literal(obj.cursor + 1);
+
+      local hasEnding = lexicon[startExpr.cursor][1] == ':'
+                        || lexicon[startExpr.cursor][1] == '::';
+      local endingExpr =
+        if !hasEnding
+        then null
+        else if lexicon[startExpr.cursor][1] == ':'
+                && lexicon[startExpr.cursor + 1][1] != ']'
+        then self.parseExpr(startExpr.cursor + 1, [']', ':'], inObject)
+        else if lexicon[startExpr.cursor][1] == ':'
+        then literal(startExpr.cursor + 1)
+        else literal(startExpr.cursor);
+
+      local stepCursor =
+        if hasEnding
+        then endingExpr.cursor
+        else startExpr.cursor;
+
+      local hasStep = (lexicon[stepCursor][1] == ':'
+                       || lexicon[stepCursor][1] == '::');
+      local stepExpr =
+        if !hasStep
+        then null
+        else if lexicon[stepCursor + 1][1] != ']'
+        then self.parseExpr(stepCursor + 1, [']'], inObject)
+        else literal(stepCursor + 1);
+
+
+      local exprs =
+        std.filter(
+          function(n) n != null, [
+            startExpr,
+            endingExpr,
+            stepExpr,
+          ]
+        );
 
       local last = std.reverse(exprs)[0];
-      local cursor =
-        if std.length(exprs) > 0
-        then last.cursor
-        else obj.cursor + 1;
-
+      local cursor = last.cursor;
       assert lexicon[cursor][1] == endToken : expmsg(endToken, lexicon[cursor]);
       {
         type: 'indexing',
