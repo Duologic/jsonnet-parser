@@ -4,8 +4,12 @@ IFS=$'\n\t'
 
 DIRNAME="$(dirname "$0")"
 
-LEX=$(find ./vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet)
-PARSE=$(find ./vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet | \
+cd $DIRNAME
+jb install
+cd -
+
+LEX=$(find ${DIRNAME}/vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet)
+PARSE=$(find ${DIRNAME}/vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet | \
         grep -v error_hexnumber | \
         grep -v import_block_literal | \
         grep -v import_computed | \
@@ -23,10 +27,10 @@ PARSE=$(find ./vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet | 
     )
 
 for F in $LEX; do
-    echo $F
-    ../scripts/lex.sh $F > /dev/null
+    echo lex: $F
+    ${DIRNAME}/../scripts/lex.sh $F > /dev/null
 done
 for F in $PARSE; do
-    echo $F
-    ../scripts/parse.sh $F > /dev/null
+    echo parse: $F
+    ${DIRNAME}/../scripts/parse.sh $F > /dev/null
 done

@@ -11,4 +11,4 @@ fi
 
 f=$(realpath $1)
 
-jrsonnet -J $DIRNAME/../vendor -e "(import '$DIRNAME/../parser.libsonnet').new(importstr '$f').parse()" --max-stack=10000 --os-stack 500 | bat -l json
+jrsonnet -J $DIRNAME/../vendor -e "(import '$DIRNAME/../parser.libsonnet').new(importstr '$f').parse()" --max-stack=10000 --os-stack 50 | bat -l json
