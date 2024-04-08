@@ -12,5 +12,12 @@ example.libsonnet.output.json:
 	jrsonnet -J vendor example.libsonnet --max-stack 10000 --os-stack 50 > example.libsonnet.output.json
 
 .PHONY: test
-test:
-	./go-jsonnet-test/test.sh
+test: test_lexer test_parser
+
+.PHONY: test_lexer
+test_lexer:
+	./go-jsonnet-test/test_lexer.sh
+
+.PHONY: test_parser
+test_parser:
+	./go-jsonnet-test/test_parser.sh

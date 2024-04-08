@@ -12,7 +12,6 @@ cd $DIRNAME/..
 jb install
 cd -
 
-LEX=$(find ${DIRNAME}/vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet)
 PARSE=$(find ${DIRNAME}/vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet | \
         grep -v error_hexnumber | \
         grep -v import_block_literal | \
@@ -30,10 +29,6 @@ PARSE=$(find ${DIRNAME}/vendor/github.com/google/go-jsonnet/testdata/ -name \*.j
         grep -v unfinished_args
     )
 
-for F in $LEX; do
-    echo lex: $F
-    ${DIRNAME}/../scripts/lex.sh $F > /dev/null
-done
 for F in $PARSE; do
     echo parse: $F
     ${DIRNAME}/../scripts/parse.sh $F > /dev/null
