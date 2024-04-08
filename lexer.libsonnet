@@ -1,8 +1,5 @@
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
-local isNumber(c) =
-  xtd.ascii.isNumber(c);
-
 local isValidIdChar(c) =
   (xtd.ascii.isLower(c)
    || xtd.ascii.isUpper(c)
@@ -60,27 +57,21 @@ local stripLeadingComments(s) =
   ],
 
   lexIdentifier(str):
-    local value =
-      if isNumber(str[0])
-      then ''
-      else
-        std.foldl(
-          function(acc, c)
-            if acc.break
-            then acc
-            else if isValidIdChar(c)
-            then acc + { value+: c }
-            else acc + { break: true },
-          std.stringChars(str),
-          { value: '', break: false }
-        ).value;
-    if value == 'in'
-    then ['OPERATOR', value]
-    else if std.member(self.keywords, value)
-    then ['KEYWORD', value]
-    else if value != ''
-    then ['IDENTIFIER', value]
-    else [],
+    if xtd.ascii.isNumber(str[0])
+    then []
+    else
+      local aux(index=0, return='') =
+        if index < std.length(str) && isValidIdChar(str[index])
+        then aux(index + 1, return + str[index])
+        else return;
+      local value = aux();
+      if value == 'in'
+      then ['OPERATOR', value]
+      else if std.member(self.keywords, value)
+      then ['KEYWORD', value]
+      else if value != ''
+      then ['IDENTIFIER', value]
+      else [],
 
   lexNumber(str):
     if !xtd.ascii.isNumber(str[0])
@@ -92,14 +83,6 @@ local stripLeadingComments(s) =
           then f(index + 1, return + str[index])
           else return;
         f();
-
-      local validateAfterChar = {
-        '-': xtd.ascii.isNumber,
-        '+': xtd.ascii.isNumber,
-        '.': xtd.ascii.isNumber,
-        e: function(c) std.member(['+', '-'], c) || xtd.ascii.isNumber(c),
-        E: self.e,
-      };
 
       local aux(index=0, return='') =
         if index < std.length(str)
@@ -135,10 +118,11 @@ local stripLeadingComments(s) =
         else return;
 
 
+      local validCharAfterZero = ['.', 'e', 'E'];
       local value =
         if std.length(leadingZeros) > 0
            && std.length(str) > std.length(leadingZeros)
-           && std.member(std.objectFields(validateAfterChar), str[std.length(leadingZeros)])
+           && std.member(validCharAfterZero, str[std.length(leadingZeros)])
         then leadingZeros[1:] + aux(std.length(leadingZeros) - 1)
         else leadingZeros + aux(std.length(leadingZeros));
 
