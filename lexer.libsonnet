@@ -198,16 +198,11 @@ local stripLeadingComments(s) =
     assert std.length(whitespaceOnFirstLine) > 0 : "text block's first line must start with whitespace";
 
     local stringlines =
-      std.foldl(
-        function(acc, line)
-          if acc.break
-          then acc
-          else if std.startsWith(line, whitespaceOnFirstLine)
-          then acc + { lines+: [line] }
-          else acc + { break: true },
-        lines[1:],
-        { lines: [], break: false }
-      ).lines;
+      local aux(index=1, return=[]) =
+        if index < std.length(lines) && std.startsWith(lines[index], whitespaceOnFirstLine)
+        then aux(index + 1, return + [lines[index]])
+        else return;
+      aux();
 
     local string = std.join('\n', stringlines);
     local endmarkerIndex = std.findSubstr(marker, lines[1 + std.length(stringlines)])[0];
