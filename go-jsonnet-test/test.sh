@@ -8,6 +8,10 @@ cd $DIRNAME
 jb install
 cd -
 
+cd $DIRNAME/..
+jb install
+cd -
+
 LEX=$(find ${DIRNAME}/vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet)
 PARSE=$(find ${DIRNAME}/vendor/github.com/google/go-jsonnet/testdata/ -name \*.jsonnet | \
         grep -v error_hexnumber | \
