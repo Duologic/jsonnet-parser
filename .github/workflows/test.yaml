@@ -4,7 +4,7 @@ on: [pull_request, push]
 env:
   JSONNET_VERSION: '0.20.0'
   JSONNET_BUNDLER_VERSION: '0.5.1'
-  JRSONNET_VERSION: 'v0.5.0-pre96-test'
+  JRSONNET_VERSION: 'v0.5.0-pre9-test'
 
 jobs:
   tests:
