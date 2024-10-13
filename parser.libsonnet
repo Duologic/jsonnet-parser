@@ -99,22 +99,16 @@ local lexer = import './lexer.libsonnet';
     parseIdentifier(index, endTokens, inObject):
       local token = lexicon[index];
       local tokenValue = token[1];
-      local literals = {
-        'null': null,
-        'true': true,
-        'false': false,
-        'self': 'self',
-        '$': '$',
+      local tokenTypes = {
+        'true': 'boolean',
+        'false': 'boolean',
+        'null': 'literal',
+        'self': 'literal',
+        '$': 'literal',
       };
-      if std.member(std.objectFields(literals), tokenValue)
-      then {
-        type: 'literal',
-        literal: literals[tokenValue],
-        cursor:: index + 1,
-      }
-      else {
-        type: 'id',
-        id: tokenValue,
+      {
+        type: std.get(tokenTypes, tokenValue, 'id'),
+        literal: tokenValue,
         cursor:: index + 1,
       },
 
