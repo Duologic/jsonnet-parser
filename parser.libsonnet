@@ -106,9 +106,10 @@ local lexer = import './lexer.libsonnet';
         'self': 'literal',
         '$': 'literal',
       };
+      local type = std.get(tokenTypes, tokenValue, 'id');
       {
-        type: std.get(tokenTypes, tokenValue, 'id'),
-        literal: tokenValue,
+        type: type,
+        [type]: tokenValue,
         cursor:: index + 1,
       },
 
