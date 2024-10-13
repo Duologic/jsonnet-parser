@@ -92,9 +92,9 @@ local lexer = import './lexer.libsonnet';
             else if token[1] == 'tailstrict'
             then self.parseTailstrict(obj, endTokens, inObject)
             else error 'Unexpected token: "%s"' % std.toString(token) + std.toString(endTokens);
-          parseRemainder(expr);
+          parseRemainder(expr + { location:: lexicon[obj.cursor][2] });
 
-      parseRemainder(expr),
+      parseRemainder(expr + { location:: lexicon[index][2] }),
 
     parseIdentifier(index, endTokens, inObject):
       local token = lexicon[index];
