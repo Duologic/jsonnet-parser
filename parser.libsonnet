@@ -670,11 +670,14 @@ local lexer = import './lexer.libsonnet';
 
     parseMember(index, endTokens, inObject):
       local token = lexicon[index];
-      if token[1] == 'local'
-      then self.parseObjectLocal(index, endTokens, inObject)
-      else if token[1] == 'assert'
-      then self.parseAssertion(index, endTokens, inObject)
-      else self.parseField(index, endTokens, inObject),
+      (
+        if token[1] == 'local'
+        then self.parseObjectLocal(index, endTokens, inObject)
+        else if token[1] == 'assert'
+        then self.parseAssertion(index, endTokens, inObject)
+        else self.parseField(index, endTokens, inObject)
+      )
+      + { location:: lexicon[index][2] },
 
     parseObjectLocal(index, endTokens, inObject):
       local token = lexicon[index];
