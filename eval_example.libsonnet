@@ -1,7 +1,10 @@
 // Values
 // Any value that can be represented with JSON is a valid value for Jsonnet.
 
+local myfn() = false;
+
 [
+  myfn(),
   // Strings, which can be added together with +.
   'json' + 'net',
 
@@ -17,6 +20,7 @@
   // Objects
   {
     local a = c,
+    local aa() = 9000,
     b: self.a,
     a+: a,
     local c = 'aaa',
@@ -27,14 +31,67 @@
     abc(myarg, def='op'):: myarg + def,
     printthis: self.abc('a', def='a'),
     aaaaa: std.trace('a', true),
-    //trythis: self.show(myarg='fasd'),
+    ty: aa(),
   },
   { key: 'value' },
 
   // Arrays, with mixed values
-  [],
+  [
+    { yes: a, no: b }
+    for a in std.range(0, 2)
+    for b in std.range(0, a)
+    if a == 2
+  ],
   ['item1', 42],
 
   // And null
   null,
+  'realy',
+
+  [
+    { a: a, b: b }
+    for a in std.range(0, 2)
+    for b in std.range(2, 6)
+    if a != 2
+  ]
+  ==
+  std.foldr(
+    function(fn, acc)
+      fn(acc),
+    [
+      function(acc)
+        std.flatMap(
+          function(item)
+            std.map(
+              function(i)
+                item + {
+                  b: i,
+                },
+              std.range(2, 6),
+            ),
+          acc
+        ),
+      function(acc)
+        std.filter(
+          function(i)
+            i.a != 2,
+          acc
+        ),
+    ],
+    std.map(
+      function(i)
+        { a: i },
+      std.range(0, 2),
+    ),
+  ),
+  (function()
+     if false
+     then
+       'a')(),
+  {
+    local b = 'b',
+    ['a' + a]: c + a + b,
+    local c = 5
+    for a in std.range(0, 2)
+  },
 ]
