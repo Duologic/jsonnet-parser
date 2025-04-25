@@ -21,3 +21,7 @@ test_lexer:
 .PHONY: test_parser
 test_parser:
 	./go-jsonnet-test/test_parser.sh
+
+.PHONY: test_eval
+test_eval:
+	./go-jsonnet-test/test_eval.sh

@@ -3,6 +3,10 @@
 
 local myfn() = false;
 
+local parentIsHidden = false;
+
+assert std.trace('log', true) : 'message';
+
 [
   myfn(),
   // Strings, which can be added together with +.
@@ -32,6 +36,8 @@ local myfn() = false;
     printthis: self.abc('a', def='a'),
     aaaaa: std.trace('a', true),
     ty: aa(),
+    lib:: { func(): 'return' },
+    inst: self.lib.func(),
   },
   { key: 'value' },
 
@@ -94,4 +100,12 @@ local myfn() = false;
     local c = 5
     for a in std.range(0, 2)
   },
+
+  std.range(0, 5)[0:3:2],
+
+  { a: 3 } + { a: 5, b: super.a } + { c: super['a' + ''], d: 'b' in super },
+
+  import 'jsonnetfile.json',
+  importstr './README.md',
+  //error 'test',
 ]
