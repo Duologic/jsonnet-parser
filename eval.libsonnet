@@ -1,10 +1,126 @@
 local parser = import './parser.libsonnet';
 
+local callAnonymous(args, callparams) =
+  args.func.call(
+    std.foldr(
+      function(i, callargs)
+        callargs + { [args.func.params[i].id]: callparams[i] },
+      std.range(0, std.length(callparams) - 1),
+      {}
+    )
+  );
+
 {
   local evaluator = self,
-  new(file, imports={
-    //std: importstr './std.jsonnet',
-  }): {
+
+  std:
+    //(import './std-builtin.jsonnet')
+    (import './std-in-jsonnet-render.libsonnet')
+    //+ (evaluator + { std: {} }).new('std', importstr './std.jsonnet').eval()
+    + {
+      //base64Decode: {
+      //  params: [
+      //    { id: 'x' },
+      //  ],
+      //  call(args):
+      //    std.base64Decode(args.x),
+      //},
+      //base64DecodeBytes: {
+      //  params: [
+      //    { id: 'x' },
+      //  ],
+      //  call(args):
+      //    std.base64DecodeBytes(args.x),
+      //},
+      join: {
+        params: [
+          { id: 'sep' },
+          { id: 'arr' },
+        ],
+        call(args):
+          std.join(args.sep, args.arr),
+      },
+      strReplace: {
+        params: [
+          { id: 'str' },
+          { id: 'from' },
+          { id: 'to' },
+        ],
+        call(args):
+          std.strReplace(args.str, args.from, args.to),
+      },
+      flatMap: {
+        params: [
+          { id: 'func' },
+          { id: 'arr' },
+        ],
+        call(args):
+          std.flatMap(
+            function(item)
+              callAnonymous(args, [item]),
+            args.arr
+          ),
+      },
+      map: {
+        params: [
+          { id: 'func' },
+          { id: 'arr' },
+        ],
+        call(args):
+          std.map(
+            function(item)
+              callAnonymous(args, [item]),
+            args.arr
+          ),
+      },
+      makeArray: {
+        params: [
+          { id: 'sz' },
+          { id: 'func' },
+        ],
+        call(args):
+          std.makeArray(
+            args.sz,
+            function(item)
+              callAnonymous(args, [item]),
+          ),
+      },
+      filter: {
+        params: [
+          { id: 'func' },
+          { id: 'arr' },
+        ],
+        call(args):
+          std.filter(
+            function(item)
+              callAnonymous(args, [item]),
+            args.arr
+          ),
+      },
+      foldr: {
+        params: [
+          { id: 'func' },
+          { id: 'arr' },
+          { id: 'init' },
+        ],
+        call(args):
+          std.foldr(
+            function(item, acc)
+              callAnonymous(args, [item, acc]),
+            std.get(
+              {
+                array: args.arr,
+                string: std.stringChars(args.arr),
+              },
+              std.type(args.arr),
+              error 'unexpected type: ' + std.type(args.arr)
+            ),
+            args.init
+          ),
+      },
+    },
+
+  new(filename, file, imports={}): {
     local root = self,
     local expr =
       if std.isString(file)
@@ -25,82 +141,8 @@ local parser = import './parser.libsonnet';
           'false': false,
         },
         locals={
-          std: {
-            local callAnonymous(args, callparams) =
-              args.func.call(
-                std.foldr(
-                  function(i, callargs)
-                    callargs + { [args.func.params[i].id]: callparams[i] },
-                  std.range(0, std.length(callparams) - 1),
-                  {}
-                )
-              ),
-            trace: {
-              params: [
-                { id: 'str' },
-                { id: 'rest' },
-              ],
-              call(args):
-                std.trace(args.str, args.rest),
-            },
-            range: {
-              params: [
-                { id: 'from' },
-                { id: 'to' },
-              ],
-              call(args):
-                std.range(args.from, args.to),
-            },
-            map: {
-              params: [
-                { id: 'func' },
-                { id: 'arr' },
-              ],
-              call(args):
-                std.map(
-                  function(item)
-                    callAnonymous(args, [item]),
-                  args.arr
-                ),
-            },
-            flatMap: {
-              params: [
-                { id: 'func' },
-                { id: 'arr' },
-              ],
-              call(args):
-                std.flatMap(
-                  function(item)
-                    callAnonymous(args, [item]),
-                  args.arr
-                ),
-            },
-            filter: {
-              params: [
-                { id: 'func' },
-                { id: 'arr' },
-              ],
-              call(args):
-                std.filter(
-                  function(item)
-                    callAnonymous(args, [item]),
-                  args.arr
-                ),
-            },
-            foldr: {
-              params: [
-                { id: 'func' },
-                { id: 'arr' },
-                { id: 'init' },
-              ],
-              call(args):
-                std.foldr(
-                  function(item, acc)
-                    callAnonymous(args, [item, acc]),
-                  args.arr,
-                  args.init
-                ),
-            },
+          std: evaluator.std + {
+            thisFile: filename,
           },
         }
       ),
@@ -135,6 +177,7 @@ local parser = import './parser.libsonnet';
           importbin_statement: root.evalImportBinStatement,
           error_expr: root.evalErrorExpr,
           expr_in_super: root.evalExprInSuper,
+          'tailstrict': root.evalTailstrict,
         },
         expr.type,
         error 'Unexpected type: ' + expr.type
@@ -145,10 +188,11 @@ local parser = import './parser.libsonnet';
 
     evalNumber(expr, env, locals):
       local pointLoc = std.findSubstr('.', expr.number);
-      if std.length(pointLoc) == 0
-      then std.parseInt(expr.number)
-      else
-        std.parseInt(std.strReplace(expr.number, '.', '')) / std.pow(10, pointLoc[0]),
+      std.parseJson(expr.number),
+    //if std.length(pointLoc) == 0
+    //then
+    //else
+    //  std.parseInt(std.strReplace(expr.number, '.', '')) / std.pow(10, pointLoc[0]),
 
     evalString(expr, env, locals):
       expr.string,
@@ -187,8 +231,9 @@ local parser = import './parser.libsonnet';
             member.type == 'field',
           expr.members
         );
+      local isDollar = !std.objectHas(env, '$');
       local fieldsEval =
-        local fieldsEnv = env + { 'self': fieldFunctionsEval };
+        local fieldsEnv = env + { 'self': fieldFunctionsEval, [if isDollar then '$']: self['self'] };
         std.foldr(
           function(field, acc)
             acc + root.evalField(field, fieldsEnv + { 'self'+: acc }, localEnv),
@@ -197,16 +242,14 @@ local parser = import './parser.libsonnet';
         );
 
       local assertions =
-        local assertEnv = env + { 'self': fieldsEval };
+        local assertEnv = env + { 'self': fieldsEval, [if isDollar then '$']: self['self'] };
         std.filterMap(
           function(member)
             member.type == 'assertion'
             && !root.evalExpr(member.expr, assertEnv, localEnv),
           function(assertion)
             // TODO: return file:location and stack trace
-            assert root.evalExpr(assertion.expr, assertEnv, localEnv) :
-                   root.evalExpr(assertion.return_expr, assertEnv, localEnv);
-            {},
+            root.evalAssertion(assertion, {}, assertEnv, localEnv),
           expr.members
         );
 
@@ -262,14 +305,13 @@ local parser = import './parser.libsonnet';
           e.exprs
         );
       local exprs = std.reverse(flattenFieldaccess(expr));
+
       local lookup =
-        std.get(
-          {
-            'self': env['self'],
-          },
-          std.get(exprs[0], 'id', ''),
-          root.evalExpr(exprs[0], env, locals)
-        );
+        if root.evalExpr(exprs[0], env, locals) == 'self'
+        then env['self']
+        else if std.get(exprs[0], 'literal', '') == '$'
+        then env['$']
+        else root.evalExpr(exprs[0], env, locals);
 
       std.foldr(
         function(expr, locals)
@@ -339,7 +381,7 @@ local parser = import './parser.libsonnet';
               if std.objectHas(givenArgs, param.id)
               then { [param.id]: givenArgs[param.id] }
               else if std.objectHas(param, 'default')
-              then { [param.id]: param.default }
+              then { [param.id]: param.default(locals + self) }
               else error 'Missing argument: ' + param.id
             ),
           std.range(0, std.length(fn.params) - 1),
@@ -366,81 +408,178 @@ local parser = import './parser.libsonnet';
         if std.objectHas(expr, 'else_expr')
         then root.evalExpr(expr.else_expr, env, locals),
 
+    // Good test case: builtinBase64Decode.jsonnet
     evalBinary(expr, env, locals):
-      local getExprs(binaryop, expr, env) = (
-        if expr.type == 'binary'
-        then
-          local left = root.evalExpr(expr.left_expr, env, locals);
-          [{ binaryop: binaryop, expr: left }]
-          + getExprs(expr.binaryop, expr.right_expr, env + { 'super': left })
-        else
-          [{ binaryop: binaryop, expr: root.evalExpr(expr, env, locals) }]
-      );
+      local precedence = [
+        '*',
+        '/',
+        '%',
+        '+',
+        '-',
+        '<<',
+        '>>',
+        '<',
+        '>',
+        '<=',
+        '>=',
+        'in',
+        '==',
+        '!=',
+        '&',
+        '^',
+        '|',
+        '&&',
+        '||',
+      ];
 
-      local left = root.evalExpr(expr.left_expr, env, locals);
+      local doOperation(tuple, superleft={}) =
+        local left =
+          if std.isArray(tuple[0])
+          then doOperation(tuple[0], superleft)
+          else root.evalExpr(tuple[0], env + { 'super'+: superleft }, locals);
+        local binaryop = tuple[1];
+        local right =
+          if std.isArray(tuple[2])
+          then doOperation(tuple[2], superleft + left)
+          else root.evalExpr(tuple[2], env + { 'super'+: superleft + left }, locals);
+
+        std.get(
+          {
+            '*': left * right,
+            '/': left / right,
+            '%': left % right,
+            '+': left + right,
+            '-': left - right,
+            '<<': left << right,
+            '>>': left >> right,
+            '<': left < right,
+            '<=': left <= right,
+            '>': left > right,
+            '>=': left >= right,
+            '==': left == right,
+            '!=': left != right,
+            'in': left in right,
+            '&': left & right,
+            '^': left ^ right,
+            '|': left | right,
+            '&&': left && right,
+            '||': left || right,
+          },
+          binaryop,
+          error 'Unexpected operator: ' + binaryop
+        );
+
+      local serializeBinaryOp(expr) =
+        [
+          expr.left_expr,
+          expr.binaryop,
+        ]
+        + (
+          if expr.right_expr.type == 'binary'
+          then serializeBinaryOp(expr.right_expr)
+          else [expr.right_expr]
+        );
+
+      local makeTuples(series) =
+        local index = std.find(series[1], precedence)[0];
+        local indexNext = std.find(series[3], precedence)[0];
+        if std.length(series) < 4  // last one
+        then series
+        else if index < indexNext
+        then
+          makeTuples(
+            [
+              series[0:3],
+            ]
+            + series[3:]
+          )
+        else
+          series[0:2]
+          + [
+            makeTuples(
+              series[2:]
+            ),
+          ];
+
       std.foldl(
-        function(left, right)
-          local leftEval = left;
-          local rightEval = right.expr;
-          std.get(
-            {
-              '+': leftEval + rightEval,
-              '-': leftEval - rightEval,
-              '*': leftEval * rightEval,
-              '/': leftEval / rightEval,
-              '&&': leftEval && rightEval,
-              '||': leftEval || rightEval,
-              '==': leftEval == rightEval,
-              '!=': leftEval != rightEval,
-            },
-            right.binaryop,
-            error 'Unexpected operator: ' + right.binaryop
-          ),
-        getExprs(expr.binaryop, expr.right_expr, env + { 'super': left }),
-        left
+        function(acc, fn)
+          fn(acc),
+        [
+          serializeBinaryOp,
+          makeTuples,
+          doOperation,
+        ],
+        expr
       ),
 
     evalUnary(expr, env, locals):
-      local eval = root.evalExpr(expr.expr, env, locals);
-      std.get(
-        {
-          '!': !eval,
-        },
-        expr.unaryop,
-        error 'Unexpected operator: ' + expr.binaryop
-      ),
+      // unary takes precedence over binary
+      if expr.expr.type == 'binary'
+      then
+        root.evalExpr(
+          expr.expr
+          + {
+            left_expr: {
+              type: 'unary',
+              unaryop: expr.unaryop,
+              expr: expr.expr.left_expr,
+            },
+          },
+          env,
+          locals
+        )
+      else
+        local eval = root.evalExpr(expr.expr, env, locals);
+        std.get(
+          {
+            '-': -eval,
+            '+': +eval,
+            '!': !eval,
+            '~': ~eval,
+          },
+          expr.unaryop,
+          error 'Unexpected operator: ' + expr.binaryop
+        ),
 
     evalImplicitPlus(expr, env, locals):
       local left = root.evalExpr(expr.expr, env, locals);
-      local right = root.evalExpr(expr.object, env + { 'super': left });
+      local right = root.evalExpr(expr.object, env + { 'super': left }, locals);
       left + right,
 
     evalAnonymousFunction(fn, env, locals): {
-      params: std.map(
-        function(param)
-          {
-            id: param.id.id,
-            [if std.objectHas(param, 'expr') then 'default']: root.evalExpr(param.expr, env, locals),
-          },
-        fn.params.params
-      ),
+      params:
+        std.map(
+          function(param)
+            {
+              id: param.id.id,
+              [if std.objectHas(param, 'expr') then 'default'](callLocals):
+                root.evalExpr(
+                  param.expr,
+                  env,
+                  locals + callLocals
+                ),
+            },
+          fn.params.params
+        ),
       call(args):
         root.evalExpr(fn.expr, env, locals + args),
     },
 
     evalAssertionExpr(expr, env, locals):
-      local assertion = root.evalExpr(expr.assertion.expr, env, locals);
-      local expression = root.evalExpr(expr.expr, env, locals);
+      local expression = root.evalExpr(expr.expression, env, locals);
+      root.evalAssertion(expr.assertion, expression, env, locals),
+
+    evalAssertion(assertion, expression, env, locals):
       (
-        if std.objectHas(expr.assertion, 'return_expr')
+        if std.objectHas(assertion, 'return_expr')
         then
           assert
-            assertion
-            : root.evalExpr(expr.assertion.return_expr, env, locals);
+            root.evalExpr(assertion.expr, env, locals)
+            : root.evalExpr(assertion.return_expr, env, locals);
           expression
         else
           assert
-            root.evalExpr(expr.assertion.expr, env, locals);
+            root.evalExpr(assertion.expr, env, locals) : std.manifestJson(assertion.expr);
           expression
       ),
 
@@ -449,7 +588,7 @@ local parser = import './parser.libsonnet';
       if std.isString(imp)
       then
         local parsed = parser.new(imp).parse();
-        evaluator.new(parsed, imports).eval()
+        evaluator.new(expr.path, parsed, imports).eval()
       else
         imp,
 
@@ -465,6 +604,9 @@ local parser = import './parser.libsonnet';
     evalExprInSuper(expr, env, locals):
       root.evalExpr(expr.expr, env, locals) in env['super'],
 
+    evalTailstrict(expr, env, locals):
+      root.evalExpr(expr.expr, env, locals) tailstrict,
+
     evalField(field, env, locals):
       local fieldname = root.evalFieldname(field.fieldname, env, locals);
       local additive =
@@ -478,10 +620,12 @@ local parser = import './parser.libsonnet';
         then '::'
         else field.h
       );
+
+      local isDollar = !std.objectHas(env, '$');
       local fieldEval(this) =
         root.evalExpr(
           field.expr,
-          env + { 'self'+: this, parentIsHidden: h == '::' },
+          env + { 'self'+: this, parentIsHidden: h == '::', [if isDollar then '$']+: this },
           locals,
         );
       std.get(
@@ -522,18 +666,26 @@ local parser = import './parser.libsonnet';
         if std.get(field, 'hidden', false)
         then '::'
         else field.h;
-      assert std.get(env, 'parentIsHidden', false) || op == '::' : "couldn't manifest function as JSON";
+      // FIXME: throw error
+      //assert std.get(env, 'parentIsHidden', false) || op == '::' : "couldn't manifest function as JSON";
+      local isDollar = !std.objectHas(env, '$');
       {
-        [fieldname]:: {
+        local this = self,
+        [fieldname]: {
           params: std.map(
             function(param)
               {
                 id: param.id.id,
-                [if std.objectHas(param, 'expr') then 'default']: root.evalExpr(param.expr, env, locals),
+                [if std.objectHas(param, 'expr') then 'default'](callLocals):
+                  root.evalExpr(
+                    param.expr,
+                    env + { 'self'+: this, [if isDollar then '$']+: this },
+                    locals + callLocals
+                  ),
               },
             field.params.params
           ),
-          call(args):
+          call(args)::
             root.evalExpr(field.expr, env, locals + args),
         },
       },
@@ -612,13 +764,17 @@ local parser = import './parser.libsonnet';
           function(param)
             {
               id: param.id.id,
-              [if std.objectHas(param, 'expr') then 'default']:
-                root.evalExpr(param.expr, env, locals + this),
+              [if std.objectHas(param, 'expr') then 'default'](callLocals):
+                root.evalExpr(
+                  param.expr,
+                  env,
+                  locals + this + callLocals
+                ),
             },
           bind.params.params
         ),
         call(args):
-          root.evalExpr(bind.expr, env, locals + this.args),
+          root.evalExpr(bind.expr, env, locals + this + args),
       },
     },
   },

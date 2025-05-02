@@ -351,7 +351,7 @@ local lexer = import './lexer.libsonnet';
       assert lexicon[obj.cursor][1] == '[' : expmsg('[', lexicon[obj.cursor]);
       local literal(cursor) = {
         type: 'literal',
-        literal: '',
+        literal: 'null',
         cursor:: cursor,
       };
 

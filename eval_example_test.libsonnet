@@ -6,4 +6,5 @@ local imports = {
   './README.md': importstr './README.md',
 };
 //(import './eval_example.libsonnet') ==
-evaluator.new(file, imports).eval()
+evaluator.new('eval_example.libsonnet', file, imports).eval()
+//std.objectFields(evaluator.new('./std.jsonnet', importstr 'std.jsonnet').eval())

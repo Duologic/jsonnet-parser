@@ -21,6 +21,9 @@ assert std.trace('log', true) : 'message';
   true || false,
   !true,
 
+  //std.isString(parentIsHidden),
+  std.thisFile,
+
   // Objects
   {
     local a = c,
