@@ -11,4 +11,4 @@ fi
 
 f=$(realpath $1)
 
-jrsonnet -J $DIRNAME/../vendor -e "(import '$DIRNAME/../eval.libsonnet').new('$f', importstr '$f', import '$DIRNAME/../imports.jsonnet').eval()" --max-stack=10000000 --os-stack 1000
+jrsonnet -J $DIRNAME/../vendor -e "(import '$DIRNAME/../eval.libsonnet').new('$f', importstr '$f', import '$DIRNAME/../go-jsonnet-test-imports.libsonnet').eval()" --max-stack=10000000 --os-stack 1000

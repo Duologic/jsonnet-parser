@@ -8,10 +8,6 @@ cd $DIRNAME
 jb install
 cd -
 
-cd $DIRNAME/..
-jb install
-cd -
-
 GOLDEN=$(find ${DIRNAME}/vendor/testdata/ -name \*.golden -type f | \
     grep -v linter | \
     grep -v std.filter7.golden | \
@@ -28,7 +24,6 @@ for F in $GOLDEN; do
     set +e
     jsonnet $F 2>&1 > /dev/null
     if [[ ${?} -eq 0 ]]; then
-    #if [ $? == 0 ]; then
         set -e
         echo "eval: $J"
         ${DIRNAME}/../scripts/eval.sh $J #> /dev/null

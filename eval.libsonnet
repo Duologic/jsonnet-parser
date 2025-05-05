@@ -14,8 +14,9 @@ local callAnonymous(args, callparams) =
   local evaluator = self,
 
   std:
-    //(import './std-builtin.jsonnet')
+    local id = function(x) x;
     (import './std-in-jsonnet-render.libsonnet')
+    // slower to evaluate std.jsonnet but it is a good stress test for the evaluator
     //+ (evaluator + { std: {} }).new('std', importstr './std.jsonnet').eval()
     + {
       //base64Decode: {
@@ -32,6 +33,51 @@ local callAnonymous(args, callparams) =
       //  call(args):
       //    std.base64DecodeBytes(args.x),
       //},
+
+      maxArray: {
+        params: [
+          {
+            id: 'arr',
+          },
+          {
+            id: 'keyF',
+            default(_): id,
+          },
+          {
+            id: 'onEmpty',
+            default: error 'Expected at least one element in array. Got none',
+          },
+        ],
+        call(args):
+          std.maxArray(
+            args.arr,
+            std.get(args, 'keyF', id),
+            args.onEmpty
+          ),
+      },
+      modulo: {
+        params: [
+          { id: 'x' },
+          { id: 'y' },
+        ],
+        call(args):
+          std.modulo(args.x, args.y),
+      },
+      trace: {
+        params: [
+          { id: 'str' },
+          { id: 'rest' },
+        ],
+        call(args):
+          std.trace(args.str, args.rest),
+      },
+      manifestJson: {
+        params: [
+          { id: 'value' },
+        ],
+        call(args):
+          std.manifestJson(args.value),
+      },
       join: {
         params: [
           { id: 'sep' },
@@ -209,7 +255,7 @@ local callAnonymous(args, callparams) =
             member.bind,
           expr.members
         );
-      local localEnv = root.evalBinds(binds, env, locals);
+      local localEnv = locals + root.evalBinds(binds, env, locals);
 
       local fieldFunctions =
         std.filter(
@@ -233,7 +279,7 @@ local callAnonymous(args, callparams) =
         );
       local isDollar = !std.objectHas(env, '$');
       local fieldsEval =
-        local fieldsEnv = env + { 'self': fieldFunctionsEval, [if isDollar then '$']: self['self'] };
+        local fieldsEnv = env + { 'self'+: fieldFunctionsEval, [if isDollar then '$']: self['self'] };
         std.foldr(
           function(field, acc)
             acc + root.evalField(field, fieldsEnv + { 'self'+: acc }, localEnv),
@@ -242,20 +288,40 @@ local callAnonymous(args, callparams) =
         );
 
       local assertions =
-        local assertEnv = env + { 'self': fieldsEval, [if isDollar then '$']: self['self'] };
-        std.filterMap(
+        if std.get(env, 'leftOfSuper', false)
+        then []
+        else std.filter(
           function(member)
-            member.type == 'assertion'
-            && !root.evalExpr(member.expr, assertEnv, localEnv),
-          function(assertion)
-            // TODO: return file:location and stack trace
-            root.evalAssertion(assertion, {}, assertEnv, localEnv),
+            member.type == 'assertion',
           expr.members
         );
 
-      if assertions != []
-      then assertions
-      else fieldsEval,
+      local assertionFuncs =
+        //assert std.trace(std.manifestJson(std.get(env['super'], 'x')), true);
+        local assertEnv = env + { 'self'+: fieldsEval, [if isDollar then '$']: self['self'] };
+        std.foldr(
+          function(assertion, acc)
+            acc + [(
+              if std.objectHas(assertion, 'return_expr')
+              then
+                function(this)
+                  // FIXME: workaround for throwing assertion with message
+                  std.trace('assert failed: ' + root.evalExpr(assertion.return_expr, assertEnv + { 'self'+: this }, localEnv),
+                            root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv))
+              else
+                function(this)
+                  root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv)
+            )],
+          assertions,
+          [],
+        );
+
+      assert
+        if std.get(env, 'leftOfSuper', false)
+        then std.trace('leftOfSuper', true)
+        else std.all(std.map(function(a) a(fieldsEval), assertionFuncs));
+
+      fieldsEval,
 
     evalObjectForloop(expr, env, locals):
       local binds =
@@ -272,7 +338,7 @@ local callAnonymous(args, callparams) =
           acc + root.evalField(
             expr.field,
             env,
-            { [forspec.id]: item } + localEnv
+            locals + { [forspec.id]: item } + localEnv
           ),
         forspec.items,
         {},
@@ -321,7 +387,11 @@ local callAnonymous(args, callparams) =
       ),
 
     evalIndexing(expr, env, locals):
-      local indexable = root.evalExpr(expr.expr, env, locals);
+      local _indexable = root.evalExpr(expr.expr, env, locals);
+      local indexable =
+        if std.isString(_indexable)
+        then std.stringChars(_indexable)
+        else _indexable;
       std.get(
         {
           '1': indexable[
@@ -342,6 +412,7 @@ local callAnonymous(args, callparams) =
       ),
 
     evalFieldaccessSuper(expr, env, locals):
+      //assert std.trace(std.manifestJson(std.get(env, 'tuple', {})), true);
       env['super'][expr.id.id],
 
     evalIndexingSuper(expr, env, locals):
@@ -399,7 +470,7 @@ local callAnonymous(args, callparams) =
 
     evalLocalBind(expr, env, locals):
       local newlocals = root.evalBinds([expr.bind] + std.get(expr, 'additional_binds', []), env, locals);
-      root.evalExpr(expr.expr, env, newlocals),
+      root.evalExpr(expr.expr, env, locals + newlocals),
 
     evalConditional(expr, env, locals):
       if root.evalExpr(expr.if_expr, env, locals)
@@ -408,8 +479,8 @@ local callAnonymous(args, callparams) =
         if std.objectHas(expr, 'else_expr')
         then root.evalExpr(expr.else_expr, env, locals),
 
-    // Good test case: builtinBase64Decode.jsonnet
     evalBinary(expr, env, locals):
+      //assert std.trace(std.manifestJson(expr), true);
       local precedence = [
         '*',
         '/',
@@ -436,12 +507,20 @@ local callAnonymous(args, callparams) =
         local left =
           if std.isArray(tuple[0])
           then doOperation(tuple[0], superleft)
-          else root.evalExpr(tuple[0], env + { 'super'+: superleft }, locals);
-        local binaryop = tuple[1];
+          else root.evalExpr(
+            tuple[0],
+            env + { 'super'+: superleft, leftOfSuper: true },
+            locals
+          );
         local right =
           if std.isArray(tuple[2])
           then doOperation(tuple[2], superleft + left)
-          else root.evalExpr(tuple[2], env + { 'super'+: superleft + left }, locals);
+          else root.evalExpr(
+            tuple[2],
+            env + { 'super'+: superleft + left },
+            locals
+          );
+        local binaryop = tuple[1];
 
         std.get(
           {
@@ -484,7 +563,9 @@ local callAnonymous(args, callparams) =
         local index = std.find(series[1], precedence)[0];
         local indexNext = std.find(series[3], precedence)[0];
         if std.length(series) < 4  // last one
-        then series
+        then
+          series
+        //assert std.trace(std.manifestJson(series), true); series
         else if index < indexNext
         then
           makeTuples(
@@ -542,9 +623,13 @@ local callAnonymous(args, callparams) =
         ),
 
     evalImplicitPlus(expr, env, locals):
-      local left = root.evalExpr(expr.expr, env, locals);
-      local right = root.evalExpr(expr.object, env + { 'super': left }, locals);
-      left + right,
+      local binaryExpr = {
+        type: 'binary',
+        binaryop: '+',
+        left_expr: expr.expr,
+        right_expr: expr.object,
+      };
+      root.evalExpr(binaryExpr, env, locals),
 
     evalAnonymousFunction(fn, env, locals): {
       params:
@@ -578,6 +663,7 @@ local callAnonymous(args, callparams) =
             : root.evalExpr(assertion.return_expr, env, locals);
           expression
         else
+          //assert std.trace(std.manifestJson(root.evalExpr(assertion.expr.left_expr, env, locals)), true);
           assert
             root.evalExpr(assertion.expr, env, locals) : std.manifestJson(assertion.expr);
           expression
@@ -750,7 +836,7 @@ local callAnonymous(args, callparams) =
             error 'Unexpected type: ' + bind.type,
           )(bind, env, locals + acc),
         binds,
-        locals,
+        {},
       ),
 
     evalBind(bind, env, locals): {
