@@ -22,7 +22,7 @@ GOLDEN=$(find ${DIRNAME}/vendor/testdata/ -name \*.golden -type f | \
 for F in $GOLDEN; do
     J="${F/golden/jsonnet}"
     set +e
-    jsonnet $F 2>&1 > /dev/null
+    jsonnet $F 2>&1 1> /dev/null
     if [[ ${?} -eq 0 ]]; then
         set -e
         echo "eval: $J"

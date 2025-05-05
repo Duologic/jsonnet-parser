@@ -562,13 +562,20 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseImplicitPlus(obj, endTokens, inObject):
-      local object = self.parseObject(obj.cursor, endTokens, inObject);
+      local object = self.parseExpr(obj.cursor, endTokens, inObject);
       {
-        type: 'implicit_plus',
-        expr: obj,
-        object: object,
+        type: 'binary',
+        binaryop: '+',
+        left_expr: obj,
+        right_expr: object,
         cursor:: object.cursor,
       },
+    //{
+    //  type: 'implicit_plus',
+    //  expr: obj,
+    //  object: object,
+    //  cursor:: object.cursor,
+    //},
 
     parseAnonymousFunction(index, endTokens, inObject):
       assert lexicon[index][1] == 'function' : expmsg('function', lexicon[index]);
