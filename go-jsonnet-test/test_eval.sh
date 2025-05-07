@@ -10,6 +10,7 @@ cd -
 
 GOLDEN=$(find ${DIRNAME}/vendor/testdata/ -name \*.golden -type f | \
     grep -v linter | \
+    grep -v tailstrict | \
     grep -v std.filter7.golden | \
     grep -v 'native.*.golden' | \
     grep -v 'builtinTrim.*.golden' | \

@@ -26,6 +26,10 @@ test_parser:
 test_eval:
 	./go-jsonnet-test/test_eval.sh
 
+std-in-jsonnet-render.libsonnet:
+	jrsonnet --max-stack 100000 -S -J vendor ./std-in-jsonnet.jsonnet > std-in-jsonnet-render.libsonnet
+	jsonnetfmt -i ./std-in-jsonnet-render.libsonnet
+
 go-jsonnet-test-imports.libsonnet:
 	echo '{' > go-jsonnet-test-imports.libsonnet
 	cd ./go-jsonnet-test/vendor/github.com/google/go-jsonnet/testdata && \

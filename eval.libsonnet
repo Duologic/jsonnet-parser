@@ -1,170 +1,11 @@
 local parser = import './parser.libsonnet';
 
-local callAnonymous(args, callparams) =
-  args.func.call(
-    std.foldr(
-      function(i, callargs)
-        callargs + { [args.func.params[i].id]: callparams[i] },
-      std.range(0, std.length(callparams) - 1),
-      {}
-    )
-  );
-
 {
   local evaluator = self,
 
-  std:
-    local id = function(x) x;
-    (import './std-in-jsonnet-render.libsonnet')
-    // slower to evaluate std.jsonnet but it is a good stress test for the evaluator
-    //+ (evaluator + { std: {} }).new('std', importstr './std.jsonnet').eval()
-    + {
-      //base64Decode: {
-      //  params: [
-      //    { id: 'x' },
-      //  ],
-      //  call(args):
-      //    std.base64Decode(args.x),
-      //},
-      //base64DecodeBytes: {
-      //  params: [
-      //    { id: 'x' },
-      //  ],
-      //  call(args):
-      //    std.base64DecodeBytes(args.x),
-      //},
-
-      maxArray: {
-        params: [
-          {
-            id: 'arr',
-          },
-          {
-            id: 'keyF',
-            default(_): id,
-          },
-          {
-            id: 'onEmpty',
-            default: error 'Expected at least one element in array. Got none',
-          },
-        ],
-        call(args):
-          std.maxArray(
-            args.arr,
-            std.get(args, 'keyF', id),
-            args.onEmpty
-          ),
-      },
-      modulo: {
-        params: [
-          { id: 'x' },
-          { id: 'y' },
-        ],
-        call(args):
-          std.modulo(args.x, args.y),
-      },
-      trace: {
-        params: [
-          { id: 'str' },
-          { id: 'rest' },
-        ],
-        call(args):
-          std.trace(args.str, args.rest),
-      },
-      manifestJson: {
-        params: [
-          { id: 'value' },
-        ],
-        call(args):
-          std.manifestJson(args.value),
-      },
-      join: {
-        params: [
-          { id: 'sep' },
-          { id: 'arr' },
-        ],
-        call(args):
-          std.join(args.sep, args.arr),
-      },
-      strReplace: {
-        params: [
-          { id: 'str' },
-          { id: 'from' },
-          { id: 'to' },
-        ],
-        call(args):
-          std.strReplace(args.str, args.from, args.to),
-      },
-      flatMap: {
-        params: [
-          { id: 'func' },
-          { id: 'arr' },
-        ],
-        call(args):
-          std.flatMap(
-            function(item)
-              callAnonymous(args, [item]),
-            args.arr
-          ),
-      },
-      map: {
-        params: [
-          { id: 'func' },
-          { id: 'arr' },
-        ],
-        call(args):
-          std.map(
-            function(item)
-              callAnonymous(args, [item]),
-            args.arr
-          ),
-      },
-      makeArray: {
-        params: [
-          { id: 'sz' },
-          { id: 'func' },
-        ],
-        call(args):
-          std.makeArray(
-            args.sz,
-            function(item)
-              callAnonymous(args, [item]),
-          ),
-      },
-      filter: {
-        params: [
-          { id: 'func' },
-          { id: 'arr' },
-        ],
-        call(args):
-          std.filter(
-            function(item)
-              callAnonymous(args, [item]),
-            args.arr
-          ),
-      },
-      foldr: {
-        params: [
-          { id: 'func' },
-          { id: 'arr' },
-          { id: 'init' },
-        ],
-        call(args):
-          std.foldr(
-            function(item, acc)
-              callAnonymous(args, [item, acc]),
-            std.get(
-              {
-                array: args.arr,
-                string: std.stringChars(args.arr),
-              },
-              std.type(args.arr),
-              error 'unexpected type: ' + std.type(args.arr)
-            ),
-            args.init
-          ),
-      },
-    },
+  std: (import './std-in-jsonnet-render.libsonnet'),
+  // slower to evaluate std.jsonnet but it is a good stress test for the evaluator
+  //+ (evaluator + { std: {} }).new('std', importstr './std.jsonnet').eval(),
 
   new(filename, file, imports={}): {
     local root = self,
@@ -172,7 +13,6 @@ local callAnonymous(args, callparams) =
       if std.isString(file)
       then
         // parse file if it is a string
-        //parser.new("local std = import 'std';" + file).parse()
         parser.new(file).parse()
       else
         // assume file is already parsed
@@ -309,19 +149,26 @@ local callAnonymous(args, callparams) =
                   std.trace('assert failed: ' + root.evalExpr(assertion.return_expr, assertEnv + { 'self'+: this }, localEnv),
                             root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv))
               else
-                function(this)
-                  root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv)
+                function(this) {
+                  assert root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv),
+                }
             )],
           assertions,
           [],
         );
 
-      assert
-        if std.get(env, 'leftOfSuper', false)
-        then std.trace('leftOfSuper', true)
-        else std.all(std.map(function(a) a(fieldsEval), assertionFuncs));
+      //assert std.trace(std.map(function(a) a(fieldsEval), assertionFuncs), true);
+      //assert
+      //  if std.get(env, 'leftOfSuper', false)
+      //  //then std.trace('leftOfSuper', true)
+      //  then true
+      //  else std.all(std.map(function(a) a(fieldsEval), assertionFuncs));
 
-      fieldsEval,
+      fieldsEval
+      + (if std.get(env, 'leftOfSuper', false)
+         //then std.trace('leftOfSuper', true)
+         then {}
+         else std.foldl(function(acc, fn) acc + fn(fieldsEval), assertionFuncs, fieldsEval)),
 
     evalObjectForloop(expr, env, locals):
       local binds =
@@ -373,7 +220,9 @@ local callAnonymous(args, callparams) =
       local exprs = std.reverse(flattenFieldaccess(expr));
 
       local lookup =
-        if root.evalExpr(exprs[0], env, locals) == 'self'
+        //assert std.trace(std.manifestJson(exprs[0]), true);
+        //if root.evalExpr(exprs[0], env, locals) == 'self'
+        if std.get(exprs[0], 'literal', '') == 'self'
         then env['self']
         else if std.get(exprs[0], 'literal', '') == '$'
         then env['$']
@@ -412,13 +261,13 @@ local callAnonymous(args, callparams) =
       ),
 
     evalFieldaccessSuper(expr, env, locals):
-      //assert std.trace(std.manifestJson(std.get(env, 'tuple', {})), true);
       env['super'][expr.id.id],
 
     evalIndexingSuper(expr, env, locals):
       env['super'][root.evalExpr(expr.expr, env, locals)],
 
     evalFunctioncall(expr, env, locals):
+      assert std.trace(std.manifestJson(expr), true);
       local fn = root.evalExpr(expr.expr, env, locals);
       local validParams = std.map(
         function(param) param.id,
@@ -504,23 +353,37 @@ local callAnonymous(args, callparams) =
       ];
 
       local doOperation(tuple, superleft={}) =
-        local left =
-          if std.isArray(tuple[0])
-          then doOperation(tuple[0], superleft)
-          else root.evalExpr(
-            tuple[0],
-            env + { 'super'+: superleft, leftOfSuper: true },
-            locals
-          );
-        local right =
-          if std.isArray(tuple[2])
-          then doOperation(tuple[2], superleft + left)
-          else root.evalExpr(
-            tuple[2],
-            env + { 'super'+: superleft + left },
-            locals
-          );
         local binaryop = tuple[1];
+        local a = {
+          local this = self,
+          left:
+            if std.isArray(tuple[0])
+            then doOperation(tuple[0], superleft)
+            else root.evalExpr(
+              tuple[0],
+              env + {
+                leftOfSuper: true,
+                [if binaryop == '+' then 'super']+: superleft,
+                [if binaryop == '+' then 'self']+: this.right,
+              },
+              locals
+            ),
+          right:
+            if std.isArray(tuple[2])
+            then doOperation(tuple[2], superleft + this.left)
+            else root.evalExpr(
+              tuple[2],
+              env + {
+                [if binaryop == '+' then 'super']+: superleft + this.left,
+                [if binaryop == '+' then 'self']+: this.left,
+              },
+              locals
+            ),
+        };
+        local left = a.left;
+        local right = a.right;
+
+        //assert std.trace(std.manifestJson(tuple), true);
 
         std.get(
           {
@@ -547,6 +410,8 @@ local callAnonymous(args, callparams) =
           binaryop,
           error 'Unexpected operator: ' + binaryop
         );
+
+      // [["5", "*", "5"], "+", ["4", "*", "4"]]
 
       local serializeBinaryOp(expr) =
         [
@@ -651,7 +516,7 @@ local callAnonymous(args, callparams) =
     },
 
     evalAssertionExpr(expr, env, locals):
-      local expression = root.evalExpr(expr.expression, env, locals);
+      local expression = root.evalExpr(expr.expr, env, locals);
       root.evalAssertion(expr.assertion, expression, env, locals),
 
     evalAssertion(assertion, expression, env, locals):
@@ -690,8 +555,10 @@ local callAnonymous(args, callparams) =
     evalExprInSuper(expr, env, locals):
       root.evalExpr(expr.expr, env, locals) in env['super'],
 
+    // FIXME: I don't understand how tailstrict works
+    // ref: https://github.com/google/jsonnet/issues/343
     evalTailstrict(expr, env, locals):
-      root.evalExpr(expr.expr, env, locals) tailstrict,
+      root.evalExpr(expr.expr, env + { 'tailstrict': true }, locals) tailstrict,
 
     evalField(field, env, locals):
       local fieldname = root.evalFieldname(field.fieldname, env, locals);
@@ -757,7 +624,7 @@ local callAnonymous(args, callparams) =
       local isDollar = !std.objectHas(env, '$');
       {
         local this = self,
-        [fieldname]: {
+        [fieldname]:: {
           params: std.map(
             function(param)
               {

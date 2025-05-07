@@ -1,17 +1,144 @@
+local a = import '../../crdsonnet/astsonnet/schema.libsonnet';
 local parser = import './parser.libsonnet';
 
+local overrides =
+  {
+    [k]: [{ id: 'str' }]
+    for k in [
+      'codepoint',
+      'encodeUTF8',
+      'parseJson',
+    ]
+  }
+  + {
+    modulo: [
+      { id: 'x' },
+      { id: 'y' },
+    ],
+    primitiveEquals: [
+      { id: 'x' },
+      { id: 'y' },
+    ],
+    pow: [
+      { id: 'x' },
+      { id: 'n' },
+    ],
+    objectFieldsEx: [
+      { id: 'obj' },
+      { id: 'hidden' },
+    ],
+    trace: [
+      { id: 'str' },
+      { id: 'rest' },
+    ],
+    strReplace: [
+      { id: 'str' },
+      { id: 'from' },
+      { id: 'to' },
+    ],
+    objectHasEx: [
+      { id: 'obj' },
+      { id: 'fname' },
+      { id: 'hidden' },
+    ],
+    char: [
+      { id: 'n' },
+    ],
+    decodeUTF8: [
+      { id: 'arr' },
+    ],
+    md5: [
+      { id: 's' },
+    ],
+    filter: [
+      { id: 'func' },
+      { id: 'arr' },
+    ],
+    makeArray: [
+      { id: 'sz' },
+      { id: 'func' },
+    ],
+    mapWithIndex: [
+      {
+        id: 'func',
+        funcArgs: ['i', 'x'],
+      },
+      { id: 'arr' },
+    ],
+    mapWithKey: [
+      {
+        id: 'func',
+        funcArgs: ['key', 'value'],
+      },
+      { id: 'obj' },
+    ],
+    foldl: [
+      {
+        id: 'func',
+        funcArgs: ['acc', 'item'],
+      },
+      { id: 'arr' },
+      { id: 'init' },
+    ],
+    foldr: [
+      {
+        id: 'func',
+        funcArgs: ['item', 'acc'],
+      },
+      { id: 'arr' },
+      { id: 'init' },
+    ],
+  };
+
 local evalTemplate(name, arguments) =
-  local params = std.map(function(param) { id: param }, arguments);
+  local params =
+    std.map(
+      function(param)
+        std.join(
+          ' ',
+          [
+            '{',
+            'id: "%s",' % param.id,
+          ]
+          + (
+            if 'expr' in param
+            then ['default(_): ' + a.objectToString(param.expr)]
+            else []
+          )
+          + [
+            '}',
+          ]
+        ),
+      arguments
+    );
   |||
     %(name)s: {
-        params: %(params)s,
+        params: [
+          %(params)s
+        ],
         call(args):
           std.%(name)s(%(args)s)
     },
   ||| % {
     name: name,
-    params: std.manifestJson(params),
-    args: std.join(',', ['args.%s' % arg for arg in arguments]),
+    params: std.join(',\n', params),
+    args: std.join(
+      ',',
+      std.map(
+        function(arg)
+          if std.member(['func', 'keyF'], arg.id)
+             || std.endsWith(arg.id, '_func')
+          then
+            'function(%(funcArgs)s) callAnonymous(args.%(id)s, [%(funcArgs)s])' % {
+              id: arg.id,
+              assert std.trace(std.manifestJson(arg), true),
+              funcArgs: std.join(',', std.get(arg, 'funcArgs', ['item'])),
+            }
+          else
+            'args.%s' % arg.id,
+        arguments,
+      )
+    ),
   };
 
 local fromStdJsonnet = importstr './std.jsonnet';
@@ -21,35 +148,36 @@ local linesFromStdJsonnet =
     function(member)
       member.type == 'field_function',
     function(member)
-      local params = std.map(function(arg) arg.id.id, member.params.params);
-      evalTemplate(member.fieldname.id, params),
+      local params = std.map(function(arg) { id: arg.id.id, [if 'expr' in arg then 'expr']: arg.expr }, member.params.params);
+      evalTemplate(member.fieldname.id, std.get(overrides, member.fieldname.id, params)),
     parsedStdJsonnet.members
   );
 
 local stdFuncs = std.objectFieldsAll(std);
-local stdJsonnetFuncs = std.objectFieldsAll(fromStdJsonnet);
+local stdJsonnetFuncs = std.objectFieldsAll(import './std.jsonnet');
 local notInStdJsonnet = std.setDiff(stdFuncs, stdJsonnetFuncs);
-
-local args(name) =
-  std.get(
-    {
-      primitiveEquals: ['x', 'y'],
-      pow: ['x', 'n'],
-      objectFieldsEx: ['obj', 'hidden'],
-    },
-    name,
-    ['x']
-  );
 
 local linesFromStd =
   std.map(
     function(name)
-      evalTemplate(name, args(name)),
+      evalTemplate(name, std.get(overrides, name, [{ id: 'x' }])),
     notInStdJsonnet,
   );
 
 std.lines(
-  ['{']
+  ["local id = { params: [{ id: 'x' }], call(args): args.x };"]
+  + [|||
+    local callAnonymous(fn, callparams) =
+      fn.call(
+        std.foldr(
+          function(i, callargs)
+            callargs + { [fn.params[i].id]: callparams[i] },
+          std.range(0, std.length(callparams) - 1),
+          {}
+        )
+      );
+  |||]
+  + ['{']
   + linesFromStdJsonnet
   + linesFromStd
   + ['}']
