@@ -143,10 +143,10 @@ local parser = import './parser.libsonnet';
             acc + [(
               if std.objectHas(assertion, 'return_expr')
               then
-                function(this)
-                  // FIXME: workaround for throwing assertion with message
-                  std.trace('assert failed: ' + root.evalExpr(assertion.return_expr, assertEnv + { 'self'+: this }, localEnv),
-                            root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv))
+                function(this) {
+                  assert root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv)
+                         : root.evalExpr(assertion.return_expr, assertEnv + { 'self'+: this }, localEnv),
+                }
               else
                 function(this) {
                   assert root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv),
@@ -158,7 +158,6 @@ local parser = import './parser.libsonnet';
 
       fieldsEval
       + (if std.get(env, 'leftOfSuper', false)
-         //then std.trace('leftOfSuper', true)
          then {}
          else std.foldl(function(acc, fn) acc + fn(fieldsEval), assertionFuncs, fieldsEval)),
 
@@ -453,18 +452,18 @@ local parser = import './parser.libsonnet';
 
     evalArgs(params, args, env, locals):
       local getArgs = import './params.libsonnet';
-      std.foldl(
-        function(acc, arg)
+      std.foldr(
+        function(arg, acc)
           acc + {
             [arg.key]:
               root.evalExpr(
                 arg.value,
                 env,
-                self
+                self + locals,  // NOTE: not sure if this is correct
               ),
           },
         std.objectKeysValues(getArgs(params, args)),
-        locals,
+        {},
       ),
 
     evalAnonymousFunction(fn, env, locals):
@@ -488,7 +487,7 @@ local parser = import './parser.libsonnet';
             locals + callLocals
           );
 
-        root.evalExpr(fn.expr, env + callEnv, args),
+        root.evalExpr(fn.expr, env + callEnv, locals + args),
 
     evalAssertionExpr(expr, env, locals):
       local expression = root.evalExpr(expr.expr, env, locals);
