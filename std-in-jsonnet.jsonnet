@@ -102,7 +102,14 @@ local evalTemplate(name, arguments) =
           ]
           + (
             if 'expr' in param
-            then ['default(_): ' + a.objectToString(param.expr)]
+            then [
+              'default: ' +
+              (
+                if std.get(param.expr, 'id', '') == 'id'
+                then 'id'
+                else param.expr
+              ),
+            ]
             else []
           )
           + [
@@ -112,27 +119,32 @@ local evalTemplate(name, arguments) =
       arguments
     );
   |||
-    %(name)s: {
-        params: [
+    %(name)s:
+        local params = [
           %(params)s
-        ],
-        call(args):
-          std.%(name)s(%(args)s)
-    },
+        ];
+        function(callArgs, env, locals)
+          local args = evaluator.evalArgs(params, callArgs, env, locals);
+          std.%(name)s(%(args)s),
   ||| % {
     name: name,
     params: std.join(',\n', params),
     args: std.join(
-      ',',
+      ',\n',
       std.map(
         function(arg)
           if std.member(['func', 'keyF'], arg.id)
              || std.endsWith(arg.id, '_func')
           then
-            'function(%(funcArgs)s) callAnonymous(args.%(id)s, [%(funcArgs)s])' % {
+            |||
+              function(%(funcArgs)s)
+                callAnonymous(args.%(id)s, [%(funcArgs)s], env, locals)
+            ||| % {
               id: arg.id,
-              assert std.trace(std.manifestJson(arg), true),
-              funcArgs: std.join(',', std.get(arg, 'funcArgs', ['item'])),
+              funcArgs: std.join(
+                ',',
+                std.get(arg, 'funcArgs', ['x'])
+              ),
             }
           else
             'args.%s' % arg.id,
@@ -165,19 +177,44 @@ local linesFromStd =
   );
 
 std.lines(
-  ["local id = { params: [{ id: 'x' }], call(args): args.x };"]
-  + [|||
-    local callAnonymous(fn, callparams) =
-      fn.call(
-        std.foldr(
-          function(i, callargs)
-            callargs + { [fn.params[i].id]: callparams[i] },
-          std.range(0, std.length(callparams) - 1),
-          {}
-        )
-      );
-  |||]
-  + ['{']
+  [
+    "local getArgs = import './params.libsonnet';",
+    'function(evaluator)',
+    'local id =',
+    std.manifestJson({
+      expr: {
+        id: 'x',
+        type: 'id',
+      },
+      params: {
+        params: [
+          {
+            id: {
+              id: 'x',
+              type: 'id',
+            },
+            type: 'param',
+          },
+        ],
+        type: 'params',
+      },
+      type: 'anonymous_function',
+    }) + ';',
+    |||
+      local callAnonymous(func, callArgs, env, locals) =
+        func(
+          std.map(
+            function(a)
+              { expr: a },
+            callArgs
+          ),
+          env,
+          locals,
+          function(params, callArgs, env, locals) locals + getArgs(params, callArgs),
+        );
+    |||,
+    '{',
+  ]
   + linesFromStdJsonnet
   + linesFromStd
   + ['}']

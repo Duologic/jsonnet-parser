@@ -1,1390 +1,1556 @@
-local id = { params: [{ id: 'x' }], call(args): args.x };
-local callAnonymous(fn, callparams) =
-  fn.call(
-    std.foldr(
-      function(i, callargs)
-        callargs { [fn.params[i].id]: callparams[i] },
-      std.range(0, std.length(callparams) - 1),
-      {}
-    )
-  );
-
-{
-  isString: {
-    params: [
-      { id: 'v' },
-    ],
-    call(args):
-      std.isString(args.v),
-  },
-
-  isNumber: {
-    params: [
-      { id: 'v' },
-    ],
-    call(args):
-      std.isNumber(args.v),
-  },
-
-  isBoolean: {
-    params: [
-      { id: 'v' },
-    ],
-    call(args):
-      std.isBoolean(args.v),
-  },
-
-  isObject: {
-    params: [
-      { id: 'v' },
-    ],
-    call(args):
-      std.isObject(args.v),
-  },
-
-  isArray: {
-    params: [
-      { id: 'v' },
-    ],
-    call(args):
-      std.isArray(args.v),
-  },
-
-  isFunction: {
-    params: [
-      { id: 'v' },
-    ],
-    call(args):
-      std.isFunction(args.v),
-  },
-
-  toString: {
-    params: [
-      { id: 'a' },
-    ],
-    call(args):
-      std.toString(args.a),
-  },
-
-  substr: {
-    params: [
-      { id: 'str' },
-      { id: 'from' },
-      { id: 'len' },
-    ],
-    call(args):
-      std.substr(args.str, args.from, args.len),
-  },
-
-  startsWith: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-    ],
-    call(args):
-      std.startsWith(args.a, args.b),
-  },
-
-  endsWith: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-    ],
-    call(args):
-      std.endsWith(args.a, args.b),
-  },
-
-  lstripChars: {
-    params: [
-      { id: 'str' },
-      { id: 'chars' },
-    ],
-    call(args):
-      std.lstripChars(args.str, args.chars),
-  },
-
-  rstripChars: {
-    params: [
-      { id: 'str' },
-      { id: 'chars' },
-    ],
-    call(args):
-      std.rstripChars(args.str, args.chars),
-  },
-
-  stripChars: {
-    params: [
-      { id: 'str' },
-      { id: 'chars' },
-    ],
-    call(args):
-      std.stripChars(args.str, args.chars),
-  },
-
-  stringChars: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.stringChars(args.str),
-  },
-
-  parseInt: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.parseInt(args.str),
-  },
-
-  parseOctal: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.parseOctal(args.str),
-  },
-
-  parseHex: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.parseHex(args.str),
-  },
-
-  split: {
-    params: [
-      { id: 'str' },
-      { id: 'c' },
-    ],
-    call(args):
-      std.split(args.str, args.c),
-  },
-
-  splitLimit: {
-    params: [
-      { id: 'str' },
-      { id: 'c' },
-      { id: 'maxsplits' },
-    ],
-    call(args):
-      std.splitLimit(args.str, args.c, args.maxsplits),
-  },
-
-  splitLimitR: {
-    params: [
-      { id: 'str' },
-      { id: 'c' },
-      { id: 'maxsplits' },
-    ],
-    call(args):
-      std.splitLimitR(args.str, args.c, args.maxsplits),
-  },
-
-  _strReplace: {
-    params: [
-      { id: 'str' },
-      { id: 'from' },
-      { id: 'to' },
-    ],
-    call(args):
-      std._strReplace(args.str, args.from, args.to),
-  },
-
-  asciiUpper: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.asciiUpper(args.str),
-  },
-
-  asciiLower: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.asciiLower(args.str),
-  },
-
-  range: {
-    params: [
-      { id: 'from' },
-      { id: 'to' },
-    ],
-    call(args):
-      std.range(args.from, args.to),
-  },
-
-  repeat: {
-    params: [
-      { id: 'what' },
-      { id: 'count' },
-    ],
-    call(args):
-      std.repeat(args.what, args.count),
-  },
-
-  slice: {
-    params: [
-      { id: 'indexable' },
-      { id: 'index' },
-      { id: 'end' },
-      { id: 'step' },
-    ],
-    call(args):
-      std.slice(args.indexable, args.index, args.end, args.step),
-  },
-
-  member: {
-    params: [
-      { id: 'arr' },
-      { id: 'x' },
-    ],
-    call(args):
-      std.member(args.arr, args.x),
-  },
-
-  count: {
-    params: [
-      { id: 'arr' },
-      { id: 'x' },
-    ],
-    call(args):
-      std.count(args.arr, args.x),
-  },
-
-  mod: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-    ],
-    call(args):
-      std.mod(args.a, args.b),
-  },
-
-  deg2rad: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.deg2rad(args.x),
-  },
-
-  rad2deg: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.rad2deg(args.x),
-  },
-
-  log2: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.log2(args.x),
-  },
-
-  log10: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.log10(args.x),
-  },
-
-  map: {
-    params: [
-      { id: 'func' },
-      { id: 'arr' },
-    ],
-    call(args):
-      std.map(function(item) callAnonymous(args.func, [item]), args.arr),
-  },
-
-  mapWithIndex: {
-    params: [
-      { id: 'func' },
-      { id: 'arr' },
-    ],
-    call(args):
-      std.mapWithIndex(function(i, x) callAnonymous(args.func, [i, x]), args.arr),
-  },
-
-  mapWithKey: {
-    params: [
-      { id: 'func' },
-      { id: 'obj' },
-    ],
-    call(args):
-      std.mapWithKey(function(key, value) callAnonymous(args.func, [key, value]), args.obj),
-  },
-
-  flatMap: {
-    params: [
-      { id: 'func' },
-      { id: 'arr' },
-    ],
-    call(args):
-      std.flatMap(function(item) callAnonymous(args.func, [item]), args.arr),
-  },
-
-  join: {
-    params: [
-      { id: 'sep' },
-      { id: 'arr' },
-    ],
-    call(args):
-      std.join(args.sep, args.arr),
-  },
-
-  lines: {
-    params: [
-      { id: 'arr' },
-    ],
-    call(args):
-      std.lines(args.arr),
-  },
-
-  deepJoin: {
-    params: [
-      { id: 'arr' },
-    ],
-    call(args):
-      std.deepJoin(args.arr),
-  },
-
-  format: {
-    params: [
-      { id: 'str' },
-      { id: 'vals' },
-    ],
-    call(args):
-      std.format(args.str, args.vals),
-  },
-
-  foldr: {
-    params: [
-      { id: 'func' },
-      { id: 'arr' },
-      { id: 'init' },
-    ],
-    call(args):
-      std.foldr(function(item, acc) callAnonymous(args.func, [item, acc]), args.arr, args.init),
-  },
-
-  foldl: {
-    params: [
-      { id: 'func' },
-      { id: 'arr' },
-      { id: 'init' },
-    ],
-    call(args):
-      std.foldl(function(acc, item) callAnonymous(args.func, [acc, item]), args.arr, args.init),
-  },
-
-  filterMap: {
-    params: [
-      { id: 'filter_func' },
-      { id: 'map_func' },
-      { id: 'arr' },
-    ],
-    call(args):
-      std.filterMap(function(item) callAnonymous(args.filter_func, [item]), function(item) callAnonymous(args.map_func, [item]), args.arr),
-  },
-
-  assertEqual: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-    ],
-    call(args):
-      std.assertEqual(args.a, args.b),
-  },
-
-  abs: {
-    params: [
-      { id: 'n' },
-    ],
-    call(args):
-      std.abs(args.n),
-  },
-
-  sign: {
-    params: [
-      { id: 'n' },
-    ],
-    call(args):
-      std.sign(args.n),
-  },
-
-  max: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-    ],
-    call(args):
-      std.max(args.a, args.b),
-  },
-
-  min: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-    ],
-    call(args):
-      std.min(args.a, args.b),
-  },
-
-  clamp: {
-    params: [
-      { id: 'x' },
-      { id: 'minVal' },
-      { id: 'maxVal' },
-    ],
-    call(args):
-      std.clamp(args.x, args.minVal, args.maxVal),
-  },
-
-  flattenArrays: {
-    params: [
-      { id: 'arrs' },
-    ],
-    call(args):
-      std.flattenArrays(args.arrs),
-  },
-
-  flattenDeepArray: {
-    params: [
-      { id: 'value' },
-    ],
-    call(args):
-      std.flattenDeepArray(args.value),
-  },
-
-  manifestIni: {
-    params: [
-      { id: 'ini' },
-    ],
-    call(args):
-      std.manifestIni(args.ini),
-  },
-
-  manifestToml: {
-    params: [
-      { id: 'value' },
-    ],
-    call(args):
-      std.manifestToml(args.value),
-  },
-
-  manifestTomlEx: {
-    params: [
-      { id: 'value' },
-      { id: 'indent' },
-    ],
-    call(args):
-      std.manifestTomlEx(args.value, args.indent),
-  },
-
-  escapeStringJson: {
-    params: [
-      { id: 'str_' },
-    ],
-    call(args):
-      std.escapeStringJson(args.str_),
-  },
-
-  escapeStringPython: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.escapeStringPython(args.str),
-  },
-
-  escapeStringBash: {
-    params: [
-      { id: 'str_' },
-    ],
-    call(args):
-      std.escapeStringBash(args.str_),
-  },
-
-  escapeStringDollars: {
-    params: [
-      { id: 'str_' },
-    ],
-    call(args):
-      std.escapeStringDollars(args.str_),
-  },
-
-  escapeStringXML: {
-    params: [
-      { id: 'str_' },
-    ],
-    call(args):
-      std.escapeStringXML(args.str_),
-  },
-
-  manifestJson: {
-    params: [
-      { id: 'value' },
-    ],
-    call(args):
-      std.manifestJson(args.value),
-  },
-
-  manifestJsonMinified: {
-    params: [
-      { id: 'value' },
-    ],
-    call(args):
-      std.manifestJsonMinified(args.value),
-  },
-
-  manifestJsonEx: {
-    params: [
-      { id: 'value' },
-      { id: 'indent' },
-      { id: 'newline', default(_): '\n' },
-      { id: 'key_val_sep', default(_): ': ' },
-    ],
-    call(args):
-      std.manifestJsonEx(args.value, args.indent, args.newline, args.key_val_sep),
-  },
-
-  manifestYamlDoc: {
-    params: [
-      { id: 'value' },
-      { id: 'indent_array_in_object', default(_): false },
-      { id: 'quote_keys', default(_): true },
-    ],
-    call(args):
-      std.manifestYamlDoc(args.value, args.indent_array_in_object, args.quote_keys),
-  },
-
-  manifestYamlStream: {
-    params: [
-      { id: 'value' },
-      { id: 'indent_array_in_object', default(_): false },
-      { id: 'c_document_end', default(_): true },
-      { id: 'quote_keys', default(_): true },
-    ],
-    call(args):
-      std.manifestYamlStream(args.value, args.indent_array_in_object, args.c_document_end, args.quote_keys),
-  },
-
-  manifestPython: {
-    params: [
-      { id: 'v' },
-    ],
-    call(args):
-      std.manifestPython(args.v),
-  },
-
-  manifestPythonVars: {
-    params: [
-      { id: 'conf' },
-    ],
-    call(args):
-      std.manifestPythonVars(args.conf),
-  },
-
-  manifestXmlJsonml: {
-    params: [
-      { id: 'value' },
-    ],
-    call(args):
-      std.manifestXmlJsonml(args.value),
-  },
-
-  base64: {
-    params: [
-      { id: 'input' },
-    ],
-    call(args):
-      std.base64(args.input),
-  },
-
-  base64DecodeBytes: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.base64DecodeBytes(args.str),
-  },
-
-  base64Decode: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.base64Decode(args.str),
-  },
-
-  reverse: {
-    params: [
-      { id: 'arr' },
-    ],
-    call(args):
-      std.reverse(args.arr),
-  },
-
-  sort: {
-    params: [
-      { id: 'arr' },
-      { id: 'keyF', default(_): id },
-    ],
-    call(args):
-      std.sort(args.arr, function(item) callAnonymous(args.keyF, [item])),
-  },
-
-  uniq: {
-    params: [
-      { id: 'arr' },
-      { id: 'keyF', default(_): id },
-    ],
-    call(args):
-      std.uniq(args.arr, function(item) callAnonymous(args.keyF, [item])),
-  },
-
-  set: {
-    params: [
-      { id: 'arr' },
-      { id: 'keyF', default(_): id },
-    ],
-    call(args):
-      std.set(args.arr, function(item) callAnonymous(args.keyF, [item])),
-  },
-
-  setMember: {
-    params: [
-      { id: 'x' },
-      { id: 'arr' },
-      { id: 'keyF', default(_): id },
-    ],
-    call(args):
-      std.setMember(args.x, args.arr, function(item) callAnonymous(args.keyF, [item])),
-  },
-
-  setUnion: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-      { id: 'keyF', default(_): id },
-    ],
-    call(args):
-      std.setUnion(args.a, args.b, function(item) callAnonymous(args.keyF, [item])),
-  },
-
-  setInter: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-      { id: 'keyF', default(_): id },
-    ],
-    call(args):
-      std.setInter(args.a, args.b, function(item) callAnonymous(args.keyF, [item])),
-  },
-
-  setDiff: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-      { id: 'keyF', default(_): id },
-    ],
-    call(args):
-      std.setDiff(args.a, args.b, function(item) callAnonymous(args.keyF, [item])),
-  },
-
-  mergePatch: {
-    params: [
-      { id: 'target' },
-      { id: 'patch' },
-    ],
-    call(args):
-      std.mergePatch(args.target, args.patch),
-  },
-
-  get: {
-    params: [
-      { id: 'o' },
-      { id: 'f' },
-      { id: 'default', default(_): null },
-      { id: 'inc_hidden', default(_): true },
-    ],
-    call(args):
-      std.get(args.o, args.f, args.default, args.inc_hidden),
-  },
-
-  objectFields: {
-    params: [
-      { id: 'o' },
-    ],
-    call(args):
-      std.objectFields(args.o),
-  },
-
-  objectFieldsAll: {
-    params: [
-      { id: 'o' },
-    ],
-    call(args):
-      std.objectFieldsAll(args.o),
-  },
-
-  objectHas: {
-    params: [
-      { id: 'o' },
-      { id: 'f' },
-    ],
-    call(args):
-      std.objectHas(args.o, args.f),
-  },
-
-  objectHasAll: {
-    params: [
-      { id: 'o' },
-      { id: 'f' },
-    ],
-    call(args):
-      std.objectHasAll(args.o, args.f),
-  },
-
-  objectValues: {
-    params: [
-      { id: 'o' },
-    ],
-    call(args):
-      std.objectValues(args.o),
-  },
-
-  objectValuesAll: {
-    params: [
-      { id: 'o' },
-    ],
-    call(args):
-      std.objectValuesAll(args.o),
-  },
-
-  objectKeysValues: {
-    params: [
-      { id: 'o' },
-    ],
-    call(args):
-      std.objectKeysValues(args.o),
-  },
-
-  objectKeysValuesAll: {
-    params: [
-      { id: 'o' },
-    ],
-    call(args):
-      std.objectKeysValuesAll(args.o),
-  },
-
-  equals: {
-    params: [
-      { id: 'a' },
-      { id: 'b' },
-    ],
-    call(args):
-      std.equals(args.a, args.b),
-  },
-
-  resolvePath: {
-    params: [
-      { id: 'f' },
-      { id: 'r' },
-    ],
-    call(args):
-      std.resolvePath(args.f, args.r),
-  },
-
-  prune: {
-    params: [
-      { id: 'a' },
-    ],
-    call(args):
-      std.prune(args.a),
-  },
-
-  findSubstr: {
-    params: [
-      { id: 'pat' },
-      { id: 'str' },
-    ],
-    call(args):
-      std.findSubstr(args.pat, args.str),
-  },
-
-  find: {
-    params: [
-      { id: 'value' },
-      { id: 'arr' },
-    ],
-    call(args):
-      std.find(args.value, args.arr),
-  },
-
-  all: {
-    params: [
-      { id: 'arr' },
-    ],
-    call(args):
-      std.all(args.arr),
-  },
-
-  any: {
-    params: [
-      { id: 'arr' },
-    ],
-    call(args):
-      std.any(args.arr),
-  },
-
-  __compare: {
-    params: [
-      { id: 'v1' },
-      { id: 'v2' },
-    ],
-    call(args):
-      std.__compare(args.v1, args.v2),
-  },
-
-  __compare_array: {
-    params: [
-      { id: 'arr1' },
-      { id: 'arr2' },
-    ],
-    call(args):
-      std.__compare_array(args.arr1, args.arr2),
-  },
-
-  __array_less: {
-    params: [
-      { id: 'arr1' },
-      { id: 'arr2' },
-    ],
-    call(args):
-      std.__array_less(args.arr1, args.arr2),
-  },
-
-  __array_greater: {
-    params: [
-      { id: 'arr1' },
-      { id: 'arr2' },
-    ],
-    call(args):
-      std.__array_greater(args.arr1, args.arr2),
-  },
-
-  __array_less_or_equal: {
-    params: [
-      { id: 'arr1' },
-      { id: 'arr2' },
-    ],
-    call(args):
-      std.__array_less_or_equal(args.arr1, args.arr2),
-  },
-
-  __array_greater_or_equal: {
-    params: [
-      { id: 'arr1' },
-      { id: 'arr2' },
-    ],
-    call(args):
-      std.__array_greater_or_equal(args.arr1, args.arr2),
-  },
-
-  sum: {
-    params: [
-      { id: 'arr' },
-    ],
-    call(args):
-      std.sum(args.arr),
-  },
-
-  avg: {
-    params: [
-      { id: 'arr' },
-    ],
-    call(args):
-      std.avg(args.arr),
-  },
-
-  minArray: {
-    params: [
-      { id: 'arr' },
-      { id: 'keyF', default(_): id },
-      { id: 'onEmpty', default(_): error 'Expected at least one element in array. Got none' },
-    ],
-    call(args):
-      std.minArray(args.arr, function(item) callAnonymous(args.keyF, [item]), args.onEmpty),
-  },
-
-  maxArray: {
-    params: [
-      { id: 'arr' },
-      { id: 'keyF', default(_): id },
-      { id: 'onEmpty', default(_): error 'Expected at least one element in array. Got none' },
-    ],
-    call(args):
-      std.maxArray(args.arr, function(item) callAnonymous(args.keyF, [item]), args.onEmpty),
-  },
-
-  xor: {
-    params: [
-      { id: 'x' },
-      { id: 'y' },
-    ],
-    call(args):
-      std.xor(args.x, args.y),
-  },
-
-  xnor: {
-    params: [
-      { id: 'x' },
-      { id: 'y' },
-    ],
-    call(args):
-      std.xnor(args.x, args.y),
-  },
-
-  round: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.round(args.x),
-  },
-
-  isEmpty: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.isEmpty(args.str),
-  },
-
-  contains: {
-    params: [
-      { id: 'arr' },
-      { id: 'elem' },
-    ],
-    call(args):
-      std.contains(args.arr, args.elem),
-  },
-
-  equalsIgnoreCase: {
-    params: [
-      { id: 'str1' },
-      { id: 'str2' },
-    ],
-    call(args):
-      std.equalsIgnoreCase(args.str1, args.str2),
-  },
-
-  isEven: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.isEven(args.x),
-  },
-
-  isOdd: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.isOdd(args.x),
-  },
-
-  isInteger: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.isInteger(args.x),
-  },
-
-  isDecimal: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.isDecimal(args.x),
-  },
-
-  removeAt: {
-    params: [
-      { id: 'arr' },
-      { id: 'at' },
-    ],
-    call(args):
-      std.removeAt(args.arr, args.at),
-  },
-
-  remove: {
-    params: [
-      { id: 'arr' },
-      { id: 'elem' },
-    ],
-    call(args):
-      std.remove(args.arr, args.elem),
-  },
-
-  objectRemoveKey: {
-    params: [
-      { id: 'obj' },
-      { id: 'key' },
-    ],
-    call(args):
-      std.objectRemoveKey(args.obj, args.key),
-  },
-
-  sha1: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.sha1(args.str),
-  },
-
-  sha256: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.sha256(args.str),
-  },
-
-  sha512: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.sha512(args.str),
-  },
-
-  sha3: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.sha3(args.str),
-  },
-
-  trim: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.trim(args.str),
-  },
-
-  acos: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.acos(args.x),
-  },
-
-  asin: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.asin(args.x),
-  },
-
-  atan: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.atan(args.x),
-  },
-
-  atan2: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.atan2(args.x),
-  },
-
-  ceil: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.ceil(args.x),
-  },
-
-  char: {
-    params: [
-      { id: 'n' },
-    ],
-    call(args):
-      std.char(args.n),
-  },
-
-  codepoint: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.codepoint(args.str),
-  },
-
-  cos: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.cos(args.x),
-  },
-
-  decodeUTF8: {
-    params: [
-      { id: 'arr' },
-    ],
-    call(args):
-      std.decodeUTF8(args.arr),
-  },
-
-  encodeUTF8: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.encodeUTF8(args.str),
-  },
-
-  exp: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.exp(args.x),
-  },
-
-  exponent: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.exponent(args.x),
-  },
-
-  extVar: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.extVar(args.x),
-  },
-
-  filter: {
-    params: [
-      { id: 'func' },
-      { id: 'arr' },
-    ],
-    call(args):
-      std.filter(function(item) callAnonymous(args.func, [item]), args.arr),
-  },
-
-  floor: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.floor(args.x),
-  },
-
-  id: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.id(args.x),
-  },
-
-  length: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.length(args.x),
-  },
-
-  log: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.log(args.x),
-  },
-
-  makeArray: {
-    params: [
-      { id: 'sz' },
-      { id: 'func' },
-    ],
-    call(args):
-      std.makeArray(args.sz, function(item) callAnonymous(args.func, [item])),
-  },
-
-  mantissa: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.mantissa(args.x),
-  },
-
-  md5: {
-    params: [
-      { id: 's' },
-    ],
-    call(args):
-      std.md5(args.s),
-  },
-
-  modulo: {
-    params: [
-      { id: 'x' },
-      { id: 'y' },
-    ],
-    call(args):
-      std.modulo(args.x, args.y),
-  },
-
-  native: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.native(args.x),
-  },
-
-  objectFieldsEx: {
-    params: [
-      { id: 'obj' },
-      { id: 'hidden' },
-    ],
-    call(args):
-      std.objectFieldsEx(args.obj, args.hidden),
-  },
-
-  objectHasEx: {
-    params: [
-      { id: 'obj' },
-      { id: 'fname' },
-      { id: 'hidden' },
-    ],
-    call(args):
-      std.objectHasEx(args.obj, args.fname, args.hidden),
-  },
-
-  parseJson: {
-    params: [
-      { id: 'str' },
-    ],
-    call(args):
-      std.parseJson(args.str),
-  },
-
-  parseYaml: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.parseYaml(args.x),
-  },
-
-  pow: {
-    params: [
-      { id: 'x' },
-      { id: 'n' },
-    ],
-    call(args):
-      std.pow(args.x, args.n),
-  },
-
-  primitiveEquals: {
-    params: [
-      { id: 'x' },
-      { id: 'y' },
-    ],
-    call(args):
-      std.primitiveEquals(args.x, args.y),
-  },
-
-  sin: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.sin(args.x),
-  },
-
-  sqrt: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.sqrt(args.x),
-  },
-
-  strReplace: {
-    params: [
-      { id: 'str' },
-      { id: 'from' },
-      { id: 'to' },
-    ],
-    call(args):
-      std.strReplace(args.str, args.from, args.to),
-  },
-
-  tan: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.tan(args.x),
-  },
-
-  thisFile: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.thisFile(args.x),
-  },
-
-  trace: {
-    params: [
-      { id: 'str' },
-      { id: 'rest' },
-    ],
-    call(args):
-      std.trace(args.str, args.rest),
-  },
-
-  type: {
-    params: [
-      { id: 'x' },
-    ],
-    call(args):
-      std.type(args.x),
-  },
-
-}
+local getArgs = import './params.libsonnet';
+function(evaluator)
+  local id =
+    {
+      expr: {
+        id: 'x',
+        type: 'id',
+      },
+      params: {
+        params: [
+          {
+            id: {
+              id: 'x',
+              type: 'id',
+            },
+            type: 'param',
+          },
+        ],
+        type: 'params',
+      },
+      type: 'anonymous_function',
+    };
+  local callAnonymous(func, callArgs, env, locals) =
+    func(
+      std.map(
+        function(a)
+          { expr: a },
+        callArgs
+      ),
+      env,
+      locals,
+      function(params, callArgs, env, locals) locals + getArgs(params, callArgs),
+    );
+
+  {
+    isString:
+      local params = [
+        { id: 'v' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isString(args.v),
+
+    isNumber:
+      local params = [
+        { id: 'v' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isNumber(args.v),
+
+    isBoolean:
+      local params = [
+        { id: 'v' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isBoolean(args.v),
+
+    isObject:
+      local params = [
+        { id: 'v' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isObject(args.v),
+
+    isArray:
+      local params = [
+        { id: 'v' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isArray(args.v),
+
+    isFunction:
+      local params = [
+        { id: 'v' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isFunction(args.v),
+
+    toString:
+      local params = [
+        { id: 'a' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.toString(args.a),
+
+    substr:
+      local params = [
+        { id: 'str' },
+        { id: 'from' },
+        { id: 'len' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.substr(args.str,
+                   args.from,
+                   args.len),
+
+    startsWith:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.startsWith(args.a,
+                       args.b),
+
+    endsWith:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.endsWith(args.a,
+                     args.b),
+
+    lstripChars:
+      local params = [
+        { id: 'str' },
+        { id: 'chars' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.lstripChars(args.str,
+                        args.chars),
+
+    rstripChars:
+      local params = [
+        { id: 'str' },
+        { id: 'chars' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.rstripChars(args.str,
+                        args.chars),
+
+    stripChars:
+      local params = [
+        { id: 'str' },
+        { id: 'chars' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.stripChars(args.str,
+                       args.chars),
+
+    stringChars:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.stringChars(args.str),
+
+    parseInt:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.parseInt(args.str),
+
+    parseOctal:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.parseOctal(args.str),
+
+    parseHex:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.parseHex(args.str),
+
+    split:
+      local params = [
+        { id: 'str' },
+        { id: 'c' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.split(args.str,
+                  args.c),
+
+    splitLimit:
+      local params = [
+        { id: 'str' },
+        { id: 'c' },
+        { id: 'maxsplits' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.splitLimit(args.str,
+                       args.c,
+                       args.maxsplits),
+
+    splitLimitR:
+      local params = [
+        { id: 'str' },
+        { id: 'c' },
+        { id: 'maxsplits' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.splitLimitR(args.str,
+                        args.c,
+                        args.maxsplits),
+
+    _strReplace:
+      local params = [
+        { id: 'str' },
+        { id: 'from' },
+        { id: 'to' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std._strReplace(args.str,
+                        args.from,
+                        args.to),
+
+    asciiUpper:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.asciiUpper(args.str),
+
+    asciiLower:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.asciiLower(args.str),
+
+    range:
+      local params = [
+        { id: 'from' },
+        { id: 'to' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.range(args.from,
+                  args.to),
+
+    repeat:
+      local params = [
+        { id: 'what' },
+        { id: 'count' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.repeat(args.what,
+                   args.count),
+
+    slice:
+      local params = [
+        { id: 'indexable' },
+        { id: 'index' },
+        { id: 'end' },
+        { id: 'step' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.slice(args.indexable,
+                  args.index,
+                  args.end,
+                  args.step),
+
+    member:
+      local params = [
+        { id: 'arr' },
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.member(args.arr,
+                   args.x),
+
+    count:
+      local params = [
+        { id: 'arr' },
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.count(args.arr,
+                  args.x),
+
+    mod:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.mod(args.a,
+                args.b),
+
+    deg2rad:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.deg2rad(args.x),
+
+    rad2deg:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.rad2deg(args.x),
+
+    log2:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.log2(args.x),
+
+    log10:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.log10(args.x),
+
+    map:
+      local params = [
+        { id: 'func' },
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.map(function(x)
+                  callAnonymous(args.func, [x], env, locals)
+                ,
+                args.arr),
+
+    mapWithIndex:
+      local params = [
+        { id: 'func' },
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.mapWithIndex(function(i, x)
+                           callAnonymous(args.func, [i, x], env, locals)
+                         ,
+                         args.arr),
+
+    mapWithKey:
+      local params = [
+        { id: 'func' },
+        { id: 'obj' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.mapWithKey(function(key, value)
+                         callAnonymous(args.func, [key, value], env, locals)
+                       ,
+                       args.obj),
+
+    flatMap:
+      local params = [
+        { id: 'func' },
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.flatMap(function(x)
+                      callAnonymous(args.func, [x], env, locals)
+                    ,
+                    args.arr),
+
+    join:
+      local params = [
+        { id: 'sep' },
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.join(args.sep,
+                 args.arr),
+
+    lines:
+      local params = [
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.lines(args.arr),
+
+    deepJoin:
+      local params = [
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.deepJoin(args.arr),
+
+    format:
+      local params = [
+        { id: 'str' },
+        { id: 'vals' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.format(args.str,
+                   args.vals),
+
+    foldr:
+      local params = [
+        { id: 'func' },
+        { id: 'arr' },
+        { id: 'init' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.foldr(function(item, acc)
+                    callAnonymous(args.func, [item, acc], env, locals)
+                  ,
+                  args.arr,
+                  args.init),
+
+    foldl:
+      local params = [
+        { id: 'func' },
+        { id: 'arr' },
+        { id: 'init' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.foldl(function(acc, item)
+                    callAnonymous(args.func, [acc, item], env, locals)
+                  ,
+                  args.arr,
+                  args.init),
+
+    filterMap:
+      local params = [
+        { id: 'filter_func' },
+        { id: 'map_func' },
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.filterMap(function(x)
+                        callAnonymous(args.filter_func, [x], env, locals)
+                      ,
+                      function(x)
+                        callAnonymous(args.map_func, [x], env, locals)
+                      ,
+                      args.arr),
+
+    assertEqual:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.assertEqual(args.a,
+                        args.b),
+
+    abs:
+      local params = [
+        { id: 'n' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.abs(args.n),
+
+    sign:
+      local params = [
+        { id: 'n' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sign(args.n),
+
+    max:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.max(args.a,
+                args.b),
+
+    min:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.min(args.a,
+                args.b),
+
+    clamp:
+      local params = [
+        { id: 'x' },
+        { id: 'minVal' },
+        { id: 'maxVal' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.clamp(args.x,
+                  args.minVal,
+                  args.maxVal),
+
+    flattenArrays:
+      local params = [
+        { id: 'arrs' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.flattenArrays(args.arrs),
+
+    flattenDeepArray:
+      local params = [
+        { id: 'value' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.flattenDeepArray(args.value),
+
+    manifestIni:
+      local params = [
+        { id: 'ini' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestIni(args.ini),
+
+    manifestToml:
+      local params = [
+        { id: 'value' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestToml(args.value),
+
+    manifestTomlEx:
+      local params = [
+        { id: 'value' },
+        { id: 'indent' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestTomlEx(args.value,
+                           args.indent),
+
+    escapeStringJson:
+      local params = [
+        { id: 'str_' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.escapeStringJson(args.str_),
+
+    escapeStringPython:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.escapeStringPython(args.str),
+
+    escapeStringBash:
+      local params = [
+        { id: 'str_' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.escapeStringBash(args.str_),
+
+    escapeStringDollars:
+      local params = [
+        { id: 'str_' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.escapeStringDollars(args.str_),
+
+    escapeStringXML:
+      local params = [
+        { id: 'str_' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.escapeStringXML(args.str_),
+
+    manifestJson:
+      local params = [
+        { id: 'value' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestJson(args.value),
+
+    manifestJsonMinified:
+      local params = [
+        { id: 'value' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestJsonMinified(args.value),
+
+    manifestJsonEx:
+      local params = [
+        { id: 'value' },
+        { id: 'indent' },
+        { id: 'newline', default: { string: '\\n', type: 'string' } },
+        { id: 'key_val_sep', default: { string: ': ', type: 'string' } },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestJsonEx(args.value,
+                           args.indent,
+                           args.newline,
+                           args.key_val_sep),
+
+    manifestYamlDoc:
+      local params = [
+        { id: 'value' },
+        { id: 'indent_array_in_object', default: { boolean: 'false', type: 'boolean' } },
+        { id: 'quote_keys', default: { boolean: 'true', type: 'boolean' } },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestYamlDoc(args.value,
+                            args.indent_array_in_object,
+                            args.quote_keys),
+
+    manifestYamlStream:
+      local params = [
+        { id: 'value' },
+        { id: 'indent_array_in_object', default: { boolean: 'false', type: 'boolean' } },
+        { id: 'c_document_end', default: { boolean: 'true', type: 'boolean' } },
+        { id: 'quote_keys', default: { boolean: 'true', type: 'boolean' } },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestYamlStream(args.value,
+                               args.indent_array_in_object,
+                               args.c_document_end,
+                               args.quote_keys),
+
+    manifestPython:
+      local params = [
+        { id: 'v' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestPython(args.v),
+
+    manifestPythonVars:
+      local params = [
+        { id: 'conf' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestPythonVars(args.conf),
+
+    manifestXmlJsonml:
+      local params = [
+        { id: 'value' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.manifestXmlJsonml(args.value),
+
+    base64:
+      local params = [
+        { id: 'input' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.base64(args.input),
+
+    base64DecodeBytes:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.base64DecodeBytes(args.str),
+
+    base64Decode:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.base64Decode(args.str),
+
+    reverse:
+      local params = [
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.reverse(args.arr),
+
+    sort:
+      local params = [
+        { id: 'arr' },
+        { id: 'keyF', default: id },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sort(
+          args.arr,
+          function(x)
+            callAnonymous(args.keyF, [x], env, locals)
+        ),
+
+    uniq:
+      local params = [
+        { id: 'arr' },
+        { id: 'keyF', default: id },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.uniq(
+          args.arr,
+          function(x)
+            callAnonymous(args.keyF, [x], env, locals)
+        ),
+
+    set:
+      local params = [
+        { id: 'arr' },
+        { id: 'keyF', default: id },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.set(
+          args.arr,
+          function(x)
+            callAnonymous(args.keyF, [x], env, locals)
+        ),
+
+    setMember:
+      local params = [
+        { id: 'x' },
+        { id: 'arr' },
+        { id: 'keyF', default: id },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.setMember(
+          args.x,
+          args.arr,
+          function(x)
+            callAnonymous(args.keyF, [x], env, locals)
+        ),
+
+    setUnion:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+        { id: 'keyF', default: id },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.setUnion(
+          args.a,
+          args.b,
+          function(x)
+            callAnonymous(args.keyF, [x], env, locals)
+        ),
+
+    setInter:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+        { id: 'keyF', default: id },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.setInter(
+          args.a,
+          args.b,
+          function(x)
+            callAnonymous(args.keyF, [x], env, locals)
+        ),
+
+    setDiff:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+        { id: 'keyF', default: id },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.setDiff(
+          args.a,
+          args.b,
+          function(x)
+            callAnonymous(args.keyF, [x], env, locals)
+        ),
+
+    mergePatch:
+      local params = [
+        { id: 'target' },
+        { id: 'patch' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.mergePatch(args.target,
+                       args.patch),
+
+    get:
+      local params = [
+        { id: 'o' },
+        { id: 'f' },
+        { id: 'default', default: { literal: 'null', type: 'literal' } },
+        { id: 'inc_hidden', default: { boolean: 'true', type: 'boolean' } },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.get(args.o,
+                args.f,
+                args.default,
+                args.inc_hidden),
+
+    objectFields:
+      local params = [
+        { id: 'o' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectFields(args.o),
+
+    objectFieldsAll:
+      local params = [
+        { id: 'o' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectFieldsAll(args.o),
+
+    objectHas:
+      local params = [
+        { id: 'o' },
+        { id: 'f' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectHas(args.o,
+                      args.f),
+
+    objectHasAll:
+      local params = [
+        { id: 'o' },
+        { id: 'f' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectHasAll(args.o,
+                         args.f),
+
+    objectValues:
+      local params = [
+        { id: 'o' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectValues(args.o),
+
+    objectValuesAll:
+      local params = [
+        { id: 'o' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectValuesAll(args.o),
+
+    objectKeysValues:
+      local params = [
+        { id: 'o' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectKeysValues(args.o),
+
+    objectKeysValuesAll:
+      local params = [
+        { id: 'o' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectKeysValuesAll(args.o),
+
+    equals:
+      local params = [
+        { id: 'a' },
+        { id: 'b' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.equals(args.a,
+                   args.b),
+
+    resolvePath:
+      local params = [
+        { id: 'f' },
+        { id: 'r' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.resolvePath(args.f,
+                        args.r),
+
+    prune:
+      local params = [
+        { id: 'a' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.prune(args.a),
+
+    findSubstr:
+      local params = [
+        { id: 'pat' },
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.findSubstr(args.pat,
+                       args.str),
+
+    find:
+      local params = [
+        { id: 'value' },
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.find(args.value,
+                 args.arr),
+
+    all:
+      local params = [
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.all(args.arr),
+
+    any:
+      local params = [
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.any(args.arr),
+
+    __compare:
+      local params = [
+        { id: 'v1' },
+        { id: 'v2' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.__compare(args.v1,
+                      args.v2),
+
+    __compare_array:
+      local params = [
+        { id: 'arr1' },
+        { id: 'arr2' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.__compare_array(args.arr1,
+                            args.arr2),
+
+    __array_less:
+      local params = [
+        { id: 'arr1' },
+        { id: 'arr2' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.__array_less(args.arr1,
+                         args.arr2),
+
+    __array_greater:
+      local params = [
+        { id: 'arr1' },
+        { id: 'arr2' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.__array_greater(args.arr1,
+                            args.arr2),
+
+    __array_less_or_equal:
+      local params = [
+        { id: 'arr1' },
+        { id: 'arr2' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.__array_less_or_equal(args.arr1,
+                                  args.arr2),
+
+    __array_greater_or_equal:
+      local params = [
+        { id: 'arr1' },
+        { id: 'arr2' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.__array_greater_or_equal(args.arr1,
+                                     args.arr2),
+
+    sum:
+      local params = [
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sum(args.arr),
+
+    avg:
+      local params = [
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.avg(args.arr),
+
+    minArray:
+      local params = [
+        { id: 'arr' },
+        { id: 'keyF', default: id },
+        { id: 'onEmpty', default: { expr: { string: 'Expected at least one element in array. Got none', type: 'string' }, type: 'error_expr' } },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.minArray(args.arr,
+                     function(x)
+                       callAnonymous(args.keyF, [x], env, locals)
+                     ,
+                     args.onEmpty),
+
+    maxArray:
+      local params = [
+        { id: 'arr' },
+        { id: 'keyF', default: id },
+        { id: 'onEmpty', default: { expr: { string: 'Expected at least one element in array. Got none', type: 'string' }, type: 'error_expr' } },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.maxArray(args.arr,
+                     function(x)
+                       callAnonymous(args.keyF, [x], env, locals)
+                     ,
+                     args.onEmpty),
+
+    xor:
+      local params = [
+        { id: 'x' },
+        { id: 'y' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.xor(args.x,
+                args.y),
+
+    xnor:
+      local params = [
+        { id: 'x' },
+        { id: 'y' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.xnor(args.x,
+                 args.y),
+
+    round:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.round(args.x),
+
+    isEmpty:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isEmpty(args.str),
+
+    contains:
+      local params = [
+        { id: 'arr' },
+        { id: 'elem' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.contains(args.arr,
+                     args.elem),
+
+    equalsIgnoreCase:
+      local params = [
+        { id: 'str1' },
+        { id: 'str2' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.equalsIgnoreCase(args.str1,
+                             args.str2),
+
+    isEven:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isEven(args.x),
+
+    isOdd:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isOdd(args.x),
+
+    isInteger:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isInteger(args.x),
+
+    isDecimal:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.isDecimal(args.x),
+
+    removeAt:
+      local params = [
+        { id: 'arr' },
+        { id: 'at' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.removeAt(args.arr,
+                     args.at),
+
+    remove:
+      local params = [
+        { id: 'arr' },
+        { id: 'elem' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.remove(args.arr,
+                   args.elem),
+
+    objectRemoveKey:
+      local params = [
+        { id: 'obj' },
+        { id: 'key' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectRemoveKey(args.obj,
+                            args.key),
+
+    sha1:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sha1(args.str),
+
+    sha256:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sha256(args.str),
+
+    sha512:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sha512(args.str),
+
+    sha3:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sha3(args.str),
+
+    trim:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.trim(args.str),
+
+    acos:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.acos(args.x),
+
+    asin:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.asin(args.x),
+
+    atan:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.atan(args.x),
+
+    atan2:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.atan2(args.x),
+
+    ceil:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.ceil(args.x),
+
+    char:
+      local params = [
+        { id: 'n' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.char(args.n),
+
+    codepoint:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.codepoint(args.str),
+
+    cos:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.cos(args.x),
+
+    decodeUTF8:
+      local params = [
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.decodeUTF8(args.arr),
+
+    encodeUTF8:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.encodeUTF8(args.str),
+
+    exp:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.exp(args.x),
+
+    exponent:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.exponent(args.x),
+
+    extVar:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.extVar(args.x),
+
+    filter:
+      local params = [
+        { id: 'func' },
+        { id: 'arr' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.filter(function(x)
+                     callAnonymous(args.func, [x], env, locals)
+                   ,
+                   args.arr),
+
+    floor:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.floor(args.x),
+
+    id:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.id(args.x),
+
+    length:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.length(args.x),
+
+    log:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.log(args.x),
+
+    makeArray:
+      local params = [
+        { id: 'sz' },
+        { id: 'func' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.makeArray(
+          args.sz,
+          function(x)
+            callAnonymous(args.func, [x], env, locals)
+        ),
+
+    mantissa:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.mantissa(args.x),
+
+    md5:
+      local params = [
+        { id: 's' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.md5(args.s),
+
+    modulo:
+      local params = [
+        { id: 'x' },
+        { id: 'y' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.modulo(args.x,
+                   args.y),
+
+    native:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.native(args.x),
+
+    objectFieldsEx:
+      local params = [
+        { id: 'obj' },
+        { id: 'hidden' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectFieldsEx(args.obj,
+                           args.hidden),
+
+    objectHasEx:
+      local params = [
+        { id: 'obj' },
+        { id: 'fname' },
+        { id: 'hidden' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.objectHasEx(args.obj,
+                        args.fname,
+                        args.hidden),
+
+    parseJson:
+      local params = [
+        { id: 'str' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.parseJson(args.str),
+
+    parseYaml:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.parseYaml(args.x),
+
+    pow:
+      local params = [
+        { id: 'x' },
+        { id: 'n' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.pow(args.x,
+                args.n),
+
+    primitiveEquals:
+      local params = [
+        { id: 'x' },
+        { id: 'y' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.primitiveEquals(args.x,
+                            args.y),
+
+    sin:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sin(args.x),
+
+    sqrt:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.sqrt(args.x),
+
+    strReplace:
+      local params = [
+        { id: 'str' },
+        { id: 'from' },
+        { id: 'to' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.strReplace(args.str,
+                       args.from,
+                       args.to),
+
+    tan:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.tan(args.x),
+
+    thisFile:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.thisFile(args.x),
+
+    trace:
+      local params = [
+        { id: 'str' },
+        { id: 'rest' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.trace(args.str,
+                  args.rest),
+
+    type:
+      local params = [
+        { id: 'x' },
+      ];
+      function(callArgs, env, locals)
+        local args = evaluator.evalArgs(params, callArgs, env, locals);
+        std.type(args.x),
+
+  }
