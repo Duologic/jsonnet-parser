@@ -5,8 +5,6 @@
 ./go-jsonnet-test/vendor/testdata/builtin_log3.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_manifestTomlEx.jsonnet
 ./go-jsonnet-test/vendor/testdata/div3.jsonnet
-./go-jsonnet-test/vendor/testdata/insuper5.jsonnet
-./go-jsonnet-test/vendor/testdata/object_comp_if.jsonnet
 ./go-jsonnet-test/vendor/testdata/pow6.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.mantissa2.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.mantissa3.jsonnet

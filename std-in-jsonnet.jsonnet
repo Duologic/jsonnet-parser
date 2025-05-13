@@ -123,8 +123,16 @@ local evalTemplate(name, arguments) =
         local params = [
           %(params)s
         ];
-        function(callArgs, env, locals, evalArgs=evaluator.evalArgs)
-          local args = evalArgs(params, callArgs, env, locals);
+        function(callArgs, env, locals, evalExpr=evaluator.evalExpr)
+          local args = evaluator.evalArgs(
+            params,
+            env,
+            locals,
+            callArgs,
+            env,
+            locals,
+            evalExpr,
+          );
           std.%(name)s(%(args)s),
   ||| % {
     name: name,
@@ -210,7 +218,7 @@ std.lines(
           ),
           env,
           locals,
-          function(params, callArgs, env, locals) locals + getArgs(params, callArgs),
+          function(expr, env, locals) expr,
         );
     |||,
     '{',

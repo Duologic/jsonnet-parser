@@ -31,6 +31,26 @@ local parser = import './parser.libsonnet';
         locals={
           std: evaluator.std(root) + {
             thisFile: filename,
+
+            length:
+              local params = [
+                { id: 'x' },
+              ];
+              function(callArgs, env, locals, evalExpr=root.evalExpr)
+                local args = root.evalArgs(
+                  params,
+                  env,
+                  locals,
+                  callArgs,
+                  env,
+                  locals,
+                  evalExpr,
+                );
+                // FIXME: this makes tests succeed but doesn't when function is wrapped in parenthesis
+                // example: `std.length((function(x,y) 42))`
+                if std.type(args.x) == 'function'
+                then std.length(callArgs[0].expr.params)
+                else std.length(args.x),
           },
         }
       ),
@@ -106,7 +126,7 @@ local parser = import './parser.libsonnet';
                      + {
                        inObject: true,
                        'self': {},
-                       'super'+: {},
+                       [if !std.get(env, 'inBinary', false) then 'super']: {},
                      };
 
       local fieldFunctions =
@@ -192,14 +212,17 @@ local parser = import './parser.libsonnet';
         );
       local objLocals = root.evalBinds(binds, env, locals);
       local forspec = root.evalForspec(expr.forspec, env, locals);
+      local compspec = root.evalCompspec(forspec, expr.compspec, env, locals);
       std.foldl(
         function(acc, item)
           acc + root.evalField(
             expr.field,
             env,
-            locals + { [forspec.id]: item } + objLocals
+            locals + item + objLocals
           ),
-        forspec.items,
+        if std.objectHas(expr, 'compspec')
+        then compspec
+        else forspec,
         {},
       ),
 
@@ -216,7 +239,9 @@ local parser = import './parser.libsonnet';
       std.map(
         function(item)
           root.evalExpr(expr.expr, env, locals + item),
-        compspec,
+        if std.objectHas(expr, 'compspec')
+        then compspec
+        else forspec,
       ),
 
     evalFieldaccess(expr, env, locals):
@@ -337,30 +362,37 @@ local parser = import './parser.libsonnet';
         '||',
       ];
 
-      local doOperation(tuple, superleft={}) =
+      local doOperation(tuple, opEnv=env) =
         local binaryop = tuple[1];
         local a = {
           local this = self,
           left:
             if std.isArray(tuple[0])
-            then doOperation(tuple[0], superleft)
+            then doOperation(tuple[0], opEnv)
             else root.evalExpr(
               tuple[0],
-              env + {
+              opEnv + {
                 leftOfSuper: true,
-                [if binaryop == '+' then 'super']+: superleft,
-                [if binaryop == '+' then 'self']+: superleft + this.right,
+                [if binaryop == '+' then 'self']+: this.right,
               },
               locals
             ),
           right:
             if std.isArray(tuple[2])
-            then doOperation(tuple[2], superleft + this.left)
+            then doOperation(
+              tuple[2],
+              opEnv + {
+                inBinary: true,
+                [if binaryop == '+' then 'super']+: this.left,
+                [if binaryop == '+' then 'self']+: this.left,
+              }
+            )
             else root.evalExpr(
               tuple[2],
-              env + {
-                [if binaryop == '+' then 'super']+: superleft + this.left,
-                [if binaryop == '+' then 'self']+: superleft + this.left,
+              opEnv + {
+                inBinary: true,
+                [if binaryop == '+' then 'super']+: this.left,
+                [if binaryop == '+' then 'self']+: this.left,
               },
               locals
             ),
@@ -480,31 +512,54 @@ local parser = import './parser.libsonnet';
       };
       root.evalExpr(binaryExpr, env, locals),
 
-    evalArgs(params, args, env, locals):
-      local evaluatedArgs =
+    evalArgs(params, env, locals, callArgs, callEnv, callLocals, evalExpr):
+      local paramIds = std.map(function(x) x.id, params);
+      local expected = ', expected (%s)' % std.join(', ', paramIds);
+      local validArgs =
         std.map(
           function(arg)
-            {
-              [if std.objectHas(arg, 'id') then 'id']: arg.id,
-              expr: root.evalExpr(arg.expr, env, locals),
-            },
-          args,
+            assert
+              !std.objectHas(arg, 'id')
+              || std.member(paramIds, arg.id)
+              : "Function has no parameter '%s'%s"
+                % [arg.id, expected]
+              ; arg,
+          callArgs
         );
-      local getArgs = import './params.libsonnet';
-      getArgs(params, evaluatedArgs),
-    //std.foldr(
-    //  function(arg, acc)
-    //    acc + {
-    //      [arg.key]:
-    //        root.evalExpr(
-    //          arg.value,
-    //          env,
-    //          self + locals,  // NOTE: not sure if this is correct
-    //        ),
-    //    },
-    //  std.objectKeysValues(getArgs(params, args)),
-    //  {},
-    //),
+      assert std.length(callArgs) <= std.length(params)
+             : 'Too many arguments' + expected;
+
+      std.foldr(
+        function(index, acc)
+          local param = params[index];
+          local findArg =
+            std.filter(
+              function(arg)
+                std.objectHas(arg, 'id')
+                && arg.id == param.id,
+              validArgs,
+            );
+
+          acc + (
+            // named argument (has id)
+            if std.length(findArg) == 1
+            then { [param.id]: evalExpr(findArg[0].expr, env, callLocals) }
+
+            // positional argument (no id)
+            else if index < std.length(validArgs)
+                    && !std.objectHas(validArgs[index], 'id')
+            then { [param.id]: evalExpr(validArgs[index].expr, env, callLocals) }
+
+            // has a default value
+            else if std.objectHas(param, 'default')
+            then { [param.id]: evalExpr(param.default, env, locals + self) }
+
+            // no value found
+            else error "Missing argument: '%s'%s" % [param.id, expected]
+          ),
+        std.range(0, std.length(params) - 1),
+        {}
+      ),
 
     evalAnonymousFunction(fn, env, locals):
       local params =
@@ -517,73 +572,16 @@ local parser = import './parser.libsonnet';
           fn.params.params
         );
 
-      local evaluatedParams =
-        std.foldr(
-          function(param, acc)
-            acc + {
-              [param.id.id]: root.evalExpr(param.expr, env, locals + self),
-            },
-          fn.params.params,
-          {}
-        );
-
-      function(callArgs=[], callEnv=env, callLocals=locals, evalArgs=root.evalArgs)
+      function(callArgs=[], callEnv=env, callLocals=locals, evalExpr=root.evalExpr)
         local args =
-          local paramIds = std.map(function(x) x.id, params);
-          local expected = ', expected (%s)' % std.join(', ', paramIds);
-          local validArgs =
-            std.map(
-              function(arg)
-                assert
-                  !std.objectHas(arg, 'id')
-                  || std.member(paramIds, arg.id)
-                  : "Function has no parameter '%s'%s"
-                    % [arg.id, expected]
-                  ; arg,
-              callArgs
-            );
-          assert std.length(callArgs) <= std.length(params)
-                 : 'Too many arguments' + expected;
-
-          std.foldr(
-            function(index, acc)
-              local param = params[index];
-              local findArg =
-                std.filter(
-                  function(arg)
-                    std.objectHas(arg, 'id')
-                    && arg.id == param.id,
-                  validArgs,
-                );
-
-              acc + (
-                // named argument (has id)
-                if std.length(findArg) == 1
-                then { [param.id]: root.evalExpr(findArg[0].expr, env, callLocals) }
-
-                // positional argument (no id)
-                else if index < std.length(validArgs)
-                        && !std.objectHas(validArgs[index], 'id')
-                then { [param.id]: root.evalExpr(validArgs[index].expr, env, callLocals) }
-
-                // has a default value
-                else if std.objectHas(param, 'default')
-                then { [param.id]: root.evalExpr(param.default, env, locals + self) }
-
-                // no value found
-                else error "Missing argument: '%s'%s" % [param.id, expected]
-              ),
-            std.range(0, std.length(params) - 1),
-            {}
-          );
-
-
-        local _args =
-          evalArgs(
+          root.evalArgs(
             params,
+            env,
+            locals,
             callArgs,
-            env + callEnv,
-            locals  //+ callLocals
+            callEnv,
+            callLocals,
+            evalExpr,
           );
 
         root.evalExpr(fn.expr, env + callEnv, locals + args),
@@ -647,10 +645,12 @@ local parser = import './parser.libsonnet';
       );
 
       local isDollar = !std.objectHas(env, '$');
+      //assert std.trace(std.manifestJson(env), true);
       local fieldEval(this) =
         root.evalExpr(
           field.expr,
           env + {
+            inBinary: false,
             'self': this,
             parentIsHidden: h == '::',
             [if isDollar then '$']: this,
@@ -721,14 +721,7 @@ local parser = import './parser.libsonnet';
             function(acc)
               std.flatMap(
                 function(item)
-                  local forspec = root.evalForspec(spec, env, locals + item);
-                  std.map(
-                    function(i)
-                      item + {
-                        [forspec.id]: i,
-                      },
-                    forspec.items,
-                  ),
+                  item + root.evalForspec(spec, env, locals + item),
                 acc
               )
           else if spec.type == 'ifspec'
@@ -742,17 +735,15 @@ local parser = import './parser.libsonnet';
           else error 'unexpected'
           for spec in compspec.items
         ],
-        std.map(
-          function(i)
-            { [forspec.id]: i },
-          forspec.items,
-        ),
+        forspec
       ),
 
-    evalForspec(forspec, env, locals): {
-      id: forspec.id.id,
-      items: root.evalExpr(forspec.expr, env, locals),
-    },
+    evalForspec(forspec, env, locals):
+      std.map(
+        function(i)
+          { [forspec.id.id]: i },
+        root.evalExpr(forspec.expr, env, locals),
+      ),
 
     evalFieldname(fieldname, env, locals):
       if fieldname.type == 'fieldname_expr'

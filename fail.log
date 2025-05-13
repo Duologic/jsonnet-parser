@@ -1,0 +1,14 @@
+
+./go-jsonnet-test/vendor/testdata/arrcomp3.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp4.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp6.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp7.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp_if2.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp_if3.jsonnet
+./go-jsonnet-test/vendor/testdata/importbin_nonutf8.jsonnet
+./go-jsonnet-test/vendor/testdata/object_comp_super.jsonnet
+./go-jsonnet-test/vendor/testdata/object_local_self_super.jsonnet
+./go-jsonnet-test/vendor/testdata/object_various_field_types.jsonnet
+./go-jsonnet-test/vendor/testdata/parseJson.jsonnet
+./go-jsonnet-test/vendor/testdata/stdlib_smoke_test.jsonnet
+./go-jsonnet-test/vendor/testdata/string2.jsonnet

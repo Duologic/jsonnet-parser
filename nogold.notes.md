@@ -5,8 +5,6 @@ precision ./go-jsonnet-test/vendor/testdata/builtin_exp4.jsonnet
 precision ./go-jsonnet-test/vendor/testdata/builtin_log3.jsonnet
 precision ./go-jsonnet-test/vendor/testdata/builtin_manifestTomlEx.jsonnet
 precision ./go-jsonnet-test/vendor/testdata/div3.jsonnet
-super ./go-jsonnet-test/vendor/testdata/insuper5.jsonnet
-wrong ./go-jsonnet-test/vendor/testdata/object_comp_if.jsonnet
 precision ./go-jsonnet-test/vendor/testdata/pow6.jsonnet
 precision ./go-jsonnet-test/vendor/testdata/std.mantissa2.jsonnet
 precision ./go-jsonnet-test/vendor/testdata/std.mantissa3.jsonnet
