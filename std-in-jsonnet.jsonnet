@@ -123,8 +123,8 @@ local evalTemplate(name, arguments) =
         local params = [
           %(params)s
         ];
-        function(callArgs, env, locals)
-          local args = evaluator.evalArgs(params, callArgs, env, locals);
+        function(callArgs, env, locals, evalArgs=evaluator.evalArgs)
+          local args = evalArgs(params, callArgs, env, locals);
           std.%(name)s(%(args)s),
   ||| % {
     name: name,

@@ -1,3 +1,4 @@
+local a = import '../../crdsonnet/astsonnet/schema.libsonnet';
 local parser = import './parser.libsonnet';
 
 {
@@ -25,6 +26,7 @@ local parser = import './parser.libsonnet';
           'null': null,
           'true': true,
           'false': false,
+          inObject: false,
         },
         locals={
           std: evaluator.std(root) + {
@@ -81,7 +83,10 @@ local parser = import './parser.libsonnet';
     //  std.parseInt(std.strReplace(expr.number, '.', '')) / std.pow(10, pointLoc[0]),
 
     evalString(expr, env, locals):
-      expr.string,
+      // FIXME: astsonnet and parser do not take double quotes into account
+      if std.get(expr, 'textblock', false)
+      then expr.string + '\n'
+      else std.parseJson(std.lstripChars(a.objectToString(expr), '@')),
 
     evalParenthesis(expr, env, locals):
       root.evalExpr(expr.expr, env, locals),
@@ -95,7 +100,14 @@ local parser = import './parser.libsonnet';
             member.bind,
           expr.members
         );
-      local localEnv = locals + root.evalBinds(binds, env, locals);
+      local objLocals = locals + root.evalBinds(binds, env, locals);
+
+      local objEnv = env
+                     + {
+                       inObject: true,
+                       'self': {},
+                       'super'+: {},
+                     };
 
       local fieldFunctions =
         std.filter(
@@ -106,7 +118,7 @@ local parser = import './parser.libsonnet';
       local fieldFunctionsEval =
         std.foldr(
           function(field, acc)
-            acc + root.evalFieldFunction(field, env, localEnv),
+            acc + root.evalFieldFunction(field, objEnv, objLocals),
           fieldFunctions,
           {}
         );
@@ -117,41 +129,45 @@ local parser = import './parser.libsonnet';
             member.type == 'field',
           expr.members
         );
-      local isDollar = !std.objectHas(env, '$');
       local fieldsEval =
-        local fieldsEnv = env + { 'self'+: fieldFunctionsEval, [if isDollar then '$']: self['self'] };
         std.foldr(
           function(field, acc)
-            acc + root.evalField(field, fieldsEnv + { 'self'+: acc }, localEnv),
+            acc + root.evalField(field, objEnv, objLocals),
           fields,
           fieldFunctionsEval,
         );
 
       local assertions =
-        if std.get(env, 'leftOfSuper', false)
-        then []
-        else std.filter(
+        std.filter(
           function(member)
             member.type == 'assertion',
           expr.members
         );
 
       local assertionFuncs =
-        local assertEnv = env + { 'self'+: fieldsEval, [if isDollar then '$']: self['self'] };
         std.foldr(
           function(assertion, acc)
-            acc + [(
-              if std.objectHas(assertion, 'return_expr')
-              then
-                function(this) {
-                  assert root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv)
-                         : root.evalExpr(assertion.return_expr, assertEnv + { 'self'+: this }, localEnv),
-                }
-              else
-                function(this) {
-                  assert root.evalExpr(assertion.expr, assertEnv + { 'self'+: this }, localEnv),
-                }
-            )],
+            acc + [
+              function(this)
+                local assertEnv = objEnv + { 'self': this };
+                {
+                  assert root.evalExpr(
+                    assertion.expr,
+                    assertEnv,
+                    objLocals,
+                  ) : (
+                    if std.objectHas(assertion, 'return_expr')
+                    then
+                      root.evalExpr(
+                        assertion.return_expr,
+                        assertEnv,
+                        objLocals,
+                      )
+                    else
+                      'Assertion failed'
+                  ),
+                },
+            ],
           assertions,
           [],
         );
@@ -159,7 +175,12 @@ local parser = import './parser.libsonnet';
       fieldsEval
       + (if std.get(env, 'leftOfSuper', false)
          then {}
-         else std.foldl(function(acc, fn) acc + fn(fieldsEval), assertionFuncs, fieldsEval)),
+         else std.foldl(
+           function(acc, fn)
+             acc + fn(fieldsEval),
+           assertionFuncs,
+           fieldsEval
+         )),
 
     evalObjectForloop(expr, env, locals):
       local binds =
@@ -169,14 +190,14 @@ local parser = import './parser.libsonnet';
           std.get(expr, 'left_object_locals', [])
           + std.get(expr, 'right_object_locals', []),
         );
-      local localEnv = root.evalBinds(binds, env, locals);
+      local objLocals = root.evalBinds(binds, env, locals);
       local forspec = root.evalForspec(expr.forspec, env, locals);
       std.foldl(
         function(acc, item)
           acc + root.evalField(
             expr.field,
             env,
-            locals + { [forspec.id]: item } + localEnv
+            locals + { [forspec.id]: item } + objLocals
           ),
         forspec.items,
         {},
@@ -212,7 +233,9 @@ local parser = import './parser.libsonnet';
 
       local lookup =
         if std.get(exprs[0], 'literal', '') == 'self'
-        then env['self']
+        then
+          assert std.trace(std.manifestJson(expr), true);
+          env['self']
         else if std.get(exprs[0], 'literal', '') == '$'
         then env['$']
         else root.evalExpr(exprs[0], env, locals);
@@ -277,7 +300,11 @@ local parser = import './parser.libsonnet';
       ),
 
     evalLocalBind(expr, env, locals):
-      local newlocals = root.evalBinds([expr.bind] + std.get(expr, 'additional_binds', []), env, locals);
+      local newlocals = root.evalBinds(
+        [expr.bind] + std.get(expr, 'additional_binds', []),
+        env,
+        locals
+      );
       root.evalExpr(expr.expr, env, locals + newlocals),
 
     evalConditional(expr, env, locals):
@@ -322,7 +349,7 @@ local parser = import './parser.libsonnet';
               env + {
                 leftOfSuper: true,
                 [if binaryop == '+' then 'super']+: superleft,
-                [if binaryop == '+' then 'self']+: this.right,
+                [if binaryop == '+' then 'self']+: superleft + this.right,
               },
               locals
             ),
@@ -333,13 +360,16 @@ local parser = import './parser.libsonnet';
               tuple[2],
               env + {
                 [if binaryop == '+' then 'super']+: superleft + this.left,
-                [if binaryop == '+' then 'self']+: this.left,
+                [if binaryop == '+' then 'self']+: superleft + this.left,
               },
               locals
             ),
         };
         local left = a.left;
         local right = a.right;
+
+        //assert std.trace('aaaa' + std.manifestJson(a.left), true);
+        //assert std.trace('bbbb' + std.manifestJson(tuple[2]), true);
 
         std.get(
           {
@@ -451,20 +481,30 @@ local parser = import './parser.libsonnet';
       root.evalExpr(binaryExpr, env, locals),
 
     evalArgs(params, args, env, locals):
+      local evaluatedArgs =
+        std.map(
+          function(arg)
+            {
+              [if std.objectHas(arg, 'id') then 'id']: arg.id,
+              expr: root.evalExpr(arg.expr, env, locals),
+            },
+          args,
+        );
       local getArgs = import './params.libsonnet';
-      std.foldr(
-        function(arg, acc)
-          acc + {
-            [arg.key]:
-              root.evalExpr(
-                arg.value,
-                env,
-                self + locals,  // NOTE: not sure if this is correct
-              ),
-          },
-        std.objectKeysValues(getArgs(params, args)),
-        {},
-      ),
+      getArgs(params, evaluatedArgs),
+    //std.foldr(
+    //  function(arg, acc)
+    //    acc + {
+    //      [arg.key]:
+    //        root.evalExpr(
+    //          arg.value,
+    //          env,
+    //          self + locals,  // NOTE: not sure if this is correct
+    //        ),
+    //    },
+    //  std.objectKeysValues(getArgs(params, args)),
+    //  {},
+    //),
 
     evalAnonymousFunction(fn, env, locals):
       local params =
@@ -472,19 +512,78 @@ local parser = import './parser.libsonnet';
           function(param)
             {
               id: param.id.id,
-              [if std.objectHas(param, 'expr') then 'default']:
-                param.expr,
+              [if std.objectHas(param, 'expr') then 'default']: param.expr,
             },
           fn.params.params
         );
 
+      local evaluatedParams =
+        std.foldr(
+          function(param, acc)
+            acc + {
+              [param.id.id]: root.evalExpr(param.expr, env, locals + self),
+            },
+          fn.params.params,
+          {}
+        );
+
       function(callArgs=[], callEnv=env, callLocals=locals, evalArgs=root.evalArgs)
         local args =
+          local paramIds = std.map(function(x) x.id, params);
+          local expected = ', expected (%s)' % std.join(', ', paramIds);
+          local validArgs =
+            std.map(
+              function(arg)
+                assert
+                  !std.objectHas(arg, 'id')
+                  || std.member(paramIds, arg.id)
+                  : "Function has no parameter '%s'%s"
+                    % [arg.id, expected]
+                  ; arg,
+              callArgs
+            );
+          assert std.length(callArgs) <= std.length(params)
+                 : 'Too many arguments' + expected;
+
+          std.foldr(
+            function(index, acc)
+              local param = params[index];
+              local findArg =
+                std.filter(
+                  function(arg)
+                    std.objectHas(arg, 'id')
+                    && arg.id == param.id,
+                  validArgs,
+                );
+
+              acc + (
+                // named argument (has id)
+                if std.length(findArg) == 1
+                then { [param.id]: root.evalExpr(findArg[0].expr, env, callLocals) }
+
+                // positional argument (no id)
+                else if index < std.length(validArgs)
+                        && !std.objectHas(validArgs[index], 'id')
+                then { [param.id]: root.evalExpr(validArgs[index].expr, env, callLocals) }
+
+                // has a default value
+                else if std.objectHas(param, 'default')
+                then { [param.id]: root.evalExpr(param.default, env, locals + self) }
+
+                // no value found
+                else error "Missing argument: '%s'%s" % [param.id, expected]
+              ),
+            std.range(0, std.length(params) - 1),
+            {}
+          );
+
+
+        local _args =
           evalArgs(
             params,
             callArgs,
             env + callEnv,
-            locals + callLocals
+            locals  //+ callLocals
           );
 
         root.evalExpr(fn.expr, env + callEnv, locals + args),
@@ -551,7 +650,11 @@ local parser = import './parser.libsonnet';
       local fieldEval(this) =
         root.evalExpr(
           field.expr,
-          env + { 'self'+: this, parentIsHidden: h == '::', [if isDollar then '$']+: this },
+          env + {
+            'self': this,
+            parentIsHidden: h == '::',
+            [if isDollar then '$']: this,
+          },
           locals,
         );
       std.get(
@@ -600,7 +703,10 @@ local parser = import './parser.libsonnet';
         [fieldname]::
           root.evalAnonymousFunction(
             field,
-            env + { 'self'+: this, [if isDollar then '$']+: this },
+            env + {
+              'self': this,
+              [if isDollar then '$']: this,
+            },
             locals
           ),
       },
@@ -651,31 +757,47 @@ local parser = import './parser.libsonnet';
     evalFieldname(fieldname, env, locals):
       if fieldname.type == 'fieldname_expr'
       then root.evalExpr(fieldname.expr, env, locals)
+      else if fieldname.type == 'string'
+      then root.evalString(fieldname, env, locals)
       else fieldname[fieldname.type],
 
-    evalBinds(binds, env, locals):
-      std.foldr(
-        function(bind, acc)
-          acc + std.get(
-            {
-              bind: root.evalBind,
-              bind_function: root.evalBindFunction,
-            },
-            bind.type,
-            error 'Unexpected type: ' + bind.type,
-          )(bind, env, locals + acc),
-        binds,
-        {},
+    evalBinds(binds, env, locals): {
+      [bind.id.id]: std.get(
+        {
+          bind: root.evalBind,
+          bind_function: root.evalBindFunction,
+        },
+        bind.type,
+        error 'Unexpected type: ' + bind.type,
+      )(bind, env, locals + self)
+      for bind in binds
+    },
+    //std.foldr(
+    //  function(bind, acc)
+    //    acc + std.get(
+    //      {
+    //        bind: root.evalBind,
+    //        bind_function: root.evalBindFunction,
+    //      },
+    //      bind.type,
+    //      error 'Unexpected type: ' + bind.type,
+    //    )(bind, env, locals + acc),
+    //  binds,
+    //  {},
+    //),
+
+    evalBind(bind, env, locals):
+      root.evalExpr(
+        bind.expr,
+        env,
+        locals
       ),
 
-    evalBind(bind, env, locals): {
-      [bind.id.id]: root.evalExpr(bind.expr, env, locals + self),
-    },
-
-    evalBindFunction(bind, env, locals): {
-      local this = self,
-      [bind.id.id]:
-        root.evalAnonymousFunction(bind, env, locals + this),
-    },
+    evalBindFunction(bind, env, locals):
+      root.evalAnonymousFunction(
+        bind,
+        env,
+        locals
+      ),
   },
 }
