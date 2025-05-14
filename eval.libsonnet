@@ -78,7 +78,7 @@ local parser = import './parser.libsonnet';
           binary: root.evalBinary,
           unary: root.evalUnary,
           implicit_plus: root.evalImplicitPlus,
-          anonymous_function: root.evalAnonymousFunction,
+          anonymous_function: root.evalFunction,
           assertion_expr: root.evalAssertionExpr,
           import_statement: root.evalImportStatement,
           importstr_statement: root.evalImportStrStatement,
@@ -561,31 +561,6 @@ local parser = import './parser.libsonnet';
         {}
       ),
 
-    evalAnonymousFunction(fn, env, locals):
-      local params =
-        std.map(
-          function(param)
-            {
-              id: param.id.id,
-              [if std.objectHas(param, 'expr') then 'default']: param.expr,
-            },
-          fn.params.params
-        );
-
-      function(callArgs=[], callEnv=env, callLocals=locals, evalExpr=root.evalExpr)
-        local args =
-          root.evalArgs(
-            params,
-            env,
-            locals,
-            callArgs,
-            callEnv,
-            callLocals,
-            evalExpr,
-          );
-
-        root.evalExpr(fn.expr, env + callEnv, locals + args),
-
     evalAssertionExpr(expr, env, locals):
       local expression = root.evalExpr(expr.expr, env, locals);
       root.evalAssertion(expr.assertion, expression, env, locals),
@@ -701,7 +676,7 @@ local parser = import './parser.libsonnet';
       {
         local this = self,
         [fieldname]::
-          root.evalAnonymousFunction(
+          root.evalFunction(
             field,
             env + {
               'self': this,
@@ -721,7 +696,11 @@ local parser = import './parser.libsonnet';
             function(acc)
               std.flatMap(
                 function(item)
-                  item + root.evalForspec(spec, env, locals + item),
+                  std.map(
+                    function(newItem)
+                      item + newItem,
+                    root.evalForspec(spec, env, locals + item)
+                  ),
                 acc
               )
           else if spec.type == 'ifspec'
@@ -756,26 +735,13 @@ local parser = import './parser.libsonnet';
       [bind.id.id]: std.get(
         {
           bind: root.evalBind,
-          bind_function: root.evalBindFunction,
+          bind_function: root.evalFunction,
         },
         bind.type,
         error 'Unexpected type: ' + bind.type,
       )(bind, env, locals + self)
       for bind in binds
     },
-    //std.foldr(
-    //  function(bind, acc)
-    //    acc + std.get(
-    //      {
-    //        bind: root.evalBind,
-    //        bind_function: root.evalBindFunction,
-    //      },
-    //      bind.type,
-    //      error 'Unexpected type: ' + bind.type,
-    //    )(bind, env, locals + acc),
-    //  binds,
-    //  {},
-    //),
 
     evalBind(bind, env, locals):
       root.evalExpr(
@@ -784,11 +750,29 @@ local parser = import './parser.libsonnet';
         locals
       ),
 
-    evalBindFunction(bind, env, locals):
-      root.evalAnonymousFunction(
-        bind,
-        env,
-        locals
-      ),
+    evalFunction(fn, env, locals):
+      local params =
+        std.map(
+          function(param)
+            {
+              id: param.id.id,
+              [if std.objectHas(param, 'expr') then 'default']: param.expr,
+            },
+          fn.params.params
+        );
+
+      function(callArgs=[], callEnv=env, callLocals=locals, evalExpr=root.evalExpr)
+        local args =
+          root.evalArgs(
+            params,
+            env,
+            locals,
+            callArgs,
+            callEnv,
+            callLocals,
+            evalExpr,
+          );
+
+        root.evalExpr(fn.expr, env + callEnv, locals + args),
   },
 }

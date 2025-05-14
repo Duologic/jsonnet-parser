@@ -6,7 +6,13 @@
 ./go-jsonnet-test/vendor/testdata/array_index3.jsonnet
 ./go-jsonnet-test/vendor/testdata/array_index4.jsonnet
 ./go-jsonnet-test/vendor/testdata/arrcomp2.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp3.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp4.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp6.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp7.jsonnet
 ./go-jsonnet-test/vendor/testdata/arrcomp.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp_if2.jsonnet
+./go-jsonnet-test/vendor/testdata/arrcomp_if3.jsonnet
 ./go-jsonnet-test/vendor/testdata/arrcomp_if5.jsonnet
 ./go-jsonnet-test/vendor/testdata/arrcomp_if.jsonnet
 ./go-jsonnet-test/vendor/testdata/assert2.jsonnet
