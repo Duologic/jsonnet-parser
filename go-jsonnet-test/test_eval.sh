@@ -39,7 +39,7 @@ for F in $GOLDEN; do
         EXEC=$(${DIRNAME}/../scripts/eval.sh $J) #> /dev/null
         if [[ ${?} -eq 0 ]]; then
             echo "$J" >> success.log
-            GOLD=$(cat $F)
+            GOLD=$(jrsonnet $J)
             if [ "${EXEC}" = "${GOLD}" ]; then
                 echo "$J" >> gold.log
             else

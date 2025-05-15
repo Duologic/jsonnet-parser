@@ -32,6 +32,7 @@
 ./go-jsonnet-test/vendor/testdata/bitwise_or6.jsonnet
 ./go-jsonnet-test/vendor/testdata/bitwise_or7.jsonnet
 ./go-jsonnet-test/vendor/testdata/bitwise_or8.jsonnet
+./go-jsonnet-test/vendor/testdata/bitwise_or9.jsonnet
 ./go-jsonnet-test/vendor/testdata/bitwise_or.jsonnet
 ./go-jsonnet-test/vendor/testdata/bitwise_shift2.jsonnet
 ./go-jsonnet-test/vendor/testdata/bitwise_shift3.jsonnet
@@ -63,9 +64,11 @@
 ./go-jsonnet-test/vendor/testdata/builtinChar.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtinContains2.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtinContains.jsonnet
+./go-jsonnet-test/vendor/testdata/builtin_cos.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtinEqualsIgnoreCase2.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtinEqualsIgnoreCase.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_exp2.jsonnet
+./go-jsonnet-test/vendor/testdata/builtin_exp4.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_exp6.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_exp7.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_exp8.jsonnet
@@ -82,11 +85,13 @@
 ./go-jsonnet-test/vendor/testdata/builtinIsOdd2.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtinIsOdd.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_log2.jsonnet
+./go-jsonnet-test/vendor/testdata/builtin_log3.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_log4.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_log6.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_log.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_lstripChars.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtinManifestJsonEx.jsonnet
+./go-jsonnet-test/vendor/testdata/builtin_manifestTomlEx.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtinMaxArray.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_member_array.jsonnet
 ./go-jsonnet-test/vendor/testdata/builtin_member_string.jsonnet
@@ -126,6 +131,7 @@
 ./go-jsonnet-test/vendor/testdata/decodeUTF8.jsonnet
 ./go-jsonnet-test/vendor/testdata/div1.jsonnet
 ./go-jsonnet-test/vendor/testdata/div2.jsonnet
+./go-jsonnet-test/vendor/testdata/div3.jsonnet
 ./go-jsonnet-test/vendor/testdata/dollar_end2.jsonnet
 ./go-jsonnet-test/vendor/testdata/dollar_end.jsonnet
 ./go-jsonnet-test/vendor/testdata/empty_array.jsonnet
@@ -169,7 +175,6 @@
 ./go-jsonnet-test/vendor/testdata/in.jsonnet
 ./go-jsonnet-test/vendor/testdata/insuper2.jsonnet
 ./go-jsonnet-test/vendor/testdata/insuper3.jsonnet
-./go-jsonnet-test/vendor/testdata/insuper5.jsonnet
 ./go-jsonnet-test/vendor/testdata/insuper7.jsonnet
 ./go-jsonnet-test/vendor/testdata/insuper.jsonnet
 ./go-jsonnet-test/vendor/testdata/lazy.jsonnet
@@ -228,6 +233,7 @@
 ./go-jsonnet-test/vendor/testdata/object_super_deep.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_super.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_super_within.jsonnet
+./go-jsonnet-test/vendor/testdata/object_various_field_types.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_within_object.jsonnet
 ./go-jsonnet-test/vendor/testdata/obj_local_right_level2.jsonnet
 ./go-jsonnet-test/vendor/testdata/obj_local_right_level3.jsonnet
@@ -254,6 +260,7 @@
 ./go-jsonnet-test/vendor/testdata/or3.jsonnet
 ./go-jsonnet-test/vendor/testdata/or.jsonnet
 ./go-jsonnet-test/vendor/testdata/overriding_stdlib_desugared.jsonnet
+./go-jsonnet-test/vendor/testdata/parseJson.jsonnet
 ./go-jsonnet-test/vendor/testdata/parseYaml.jsonnet
 ./go-jsonnet-test/vendor/testdata/percent_format_float.jsonnet
 ./go-jsonnet-test/vendor/testdata/percent_format_str2.jsonnet
@@ -277,6 +284,7 @@
 ./go-jsonnet-test/vendor/testdata/pow2.jsonnet
 ./go-jsonnet-test/vendor/testdata/pow3.jsonnet
 ./go-jsonnet-test/vendor/testdata/pow5.jsonnet
+./go-jsonnet-test/vendor/testdata/pow6.jsonnet
 ./go-jsonnet-test/vendor/testdata/pow.jsonnet
 ./go-jsonnet-test/vendor/testdata/proto_object_comp.jsonnet
 ./go-jsonnet-test/vendor/testdata/recursive_local.jsonnet
@@ -334,6 +342,12 @@
 ./go-jsonnet-test/vendor/testdata/std.makeArrayNamed2.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.makeArrayNamed4.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.makeArrayNamed.jsonnet
+./go-jsonnet-test/vendor/testdata/std.mantissa2.jsonnet
+./go-jsonnet-test/vendor/testdata/std.mantissa3.jsonnet
+./go-jsonnet-test/vendor/testdata/std.mantissa4.jsonnet
+./go-jsonnet-test/vendor/testdata/std.mantissa5.jsonnet
+./go-jsonnet-test/vendor/testdata/std.mantissa6.jsonnet
+./go-jsonnet-test/vendor/testdata/std.mantissa7.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.mantissa.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.md5_2.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.md5_3.jsonnet
@@ -376,6 +390,7 @@
 ./go-jsonnet-test/vendor/testdata/std.toString7.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.toString8.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.toString.jsonnet
+./go-jsonnet-test/vendor/testdata/string2.jsonnet
 ./go-jsonnet-test/vendor/testdata/string_comparison1.jsonnet
 ./go-jsonnet-test/vendor/testdata/string_comparison2.jsonnet
 ./go-jsonnet-test/vendor/testdata/string_comparison3.jsonnet

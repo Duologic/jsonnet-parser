@@ -97,16 +97,11 @@ local parser = import './parser.libsonnet';
     evalNumber(expr, env, locals):
       local pointLoc = std.findSubstr('.', expr.number);
       std.parseJson(expr.number),
-    //if std.length(pointLoc) == 0
-    //then
-    //else
-    //  std.parseInt(std.strReplace(expr.number, '.', '')) / std.pow(10, pointLoc[0]),
 
     evalString(expr, env, locals):
-      // FIXME: astsonnet and parser do not take double quotes into account
       if std.get(expr, 'textblock', false)
       then expr.string + '\n'
-      else std.parseJson(std.lstripChars(a.objectToString(expr), '@')),
+      else expr.string,
 
     evalParenthesis(expr, env, locals):
       root.evalExpr(expr.expr, env, locals),

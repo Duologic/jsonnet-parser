@@ -1,4 +1,3 @@
-local getArgs = import './params.libsonnet';
 function(evaluator)
   local id =
     {
@@ -1125,7 +1124,7 @@ function(evaluator)
       local params = [
         { id: 'value' },
         { id: 'indent' },
-        { id: 'newline', default: { string: '\\n', type: 'string' } },
+        { id: 'newline', default: { string: '\n', type: 'string' } },
         { id: 'key_val_sep', default: { string: ': ', type: 'string' } },
       ];
       function(callArgs, env, locals, evalExpr=evaluator.evalExpr)

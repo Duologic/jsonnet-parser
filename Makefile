@@ -39,3 +39,6 @@ go-jsonnet-test-imports.libsonnet:
 		../../../../../../go-jsonnet-test-imports.libsonnet
 	echo '}' >> ./go-jsonnet-test-imports.libsonnet
 	jsonnetfmt -i ./go-jsonnet-test-imports.libsonnet
+
+unicode.libsonnet:
+	jrsonnet allunicode.jsonnet | sed 's;"\\\\u\(.*\)",\?;["\\\\u\1", "\\u\1"],;g' > unicode.libsonnet

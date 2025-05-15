@@ -186,7 +186,6 @@ local linesFromStd =
 
 std.lines(
   [
-    "local getArgs = import './params.libsonnet';",
     'function(evaluator)',
     'local id =',
     std.manifestJson({
