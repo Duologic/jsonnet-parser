@@ -1,4 +1,3 @@
-local a = import '../../crdsonnet/astsonnet/schema.libsonnet';
 local parser = import './parser.libsonnet';
 
 {
@@ -106,7 +105,14 @@ local parser = import './parser.libsonnet';
     evalParenthesis(expr, env, locals):
       root.evalExpr(expr.expr, env, locals),
 
-    evalObject(expr, env, locals):
+    evalObject(expr, env, locals): {
+      local objEnv = env
+                     + {
+                       inObject: true,
+                       'self': result + std.get(env, 'right', {}),
+                       [if !std.get(env, 'inBinary', false) then 'super']: {},
+                     },
+
       local binds =
         std.filterMap(
           function(member)
@@ -114,88 +120,79 @@ local parser = import './parser.libsonnet';
           function(member)
             member.bind,
           expr.members
-        );
-      local objLocals = locals + root.evalBinds(binds, env, locals);
+        ),
 
-      local objEnv = env
-                     + {
-                       inObject: true,
-                       'self': {},
-                       [if !std.get(env, 'inBinary', false) then 'super']: {},
-                     };
+      local objLocals = locals + root.evalBinds(binds, objEnv, locals),
 
       local fieldFunctions =
         std.filter(
           function(member)
             member.type == 'field_function',
           expr.members
-        );
+        ),
       local fieldFunctionsEval =
         std.foldr(
           function(field, acc)
             acc + root.evalFieldFunction(field, objEnv, objLocals),
           fieldFunctions,
           {}
-        );
+        ),
 
       local fields =
         std.filter(
           function(member)
             member.type == 'field',
           expr.members
-        );
+        ),
       local fieldsEval =
         std.foldr(
           function(field, acc)
             acc + root.evalField(field, objEnv, objLocals),
           fields,
           fieldFunctionsEval,
-        );
+        ),
 
       local assertions =
         std.filter(
           function(member)
             member.type == 'assertion',
           expr.members
-        );
+        ),
 
       local assertionFuncs =
         std.foldr(
           function(assertion, acc)
-            acc + [
-              function(this)
-                local assertEnv = objEnv + { 'self': this };
-                {
-                  assert root.evalExpr(
-                    assertion.expr,
-                    assertEnv,
+            acc + {
+              assert root.evalExpr(
+                assertion.expr,
+                objEnv,
+                objLocals,
+              ) : (
+                if std.objectHas(assertion, 'return_expr')
+                then
+                  root.evalExpr(
+                    assertion.return_expr,
+                    objEnv,
                     objLocals,
-                  ) : (
-                    if std.objectHas(assertion, 'return_expr')
-                    then
-                      root.evalExpr(
-                        assertion.return_expr,
-                        assertEnv,
-                        objLocals,
-                      )
-                    else
-                      'Assertion failed'
-                  ),
-                },
-            ],
+                  )
+                else
+                  'Assertion failed'
+              ),
+            },
           assertions,
-          [],
-        );
+          {},
+        ),
 
-      fieldsEval
-      + (if std.get(env, 'leftOfSuper', false)
-         then {}
-         else std.foldl(
-           function(acc, fn)
-             acc + fn(fieldsEval),
-           assertionFuncs,
-           fieldsEval
-         )),
+      local result =
+        fieldsEval
+        + (
+          if std.get(env, 'doAssertion', false)
+          then assertionFuncs
+          else {}
+        ),
+
+      result: result,
+    }.result,
 
     evalObjectForloop(expr, env, locals):
       local binds =
@@ -253,9 +250,7 @@ local parser = import './parser.libsonnet';
 
       local lookup =
         if std.get(exprs[0], 'literal', '') == 'self'
-        then
-          assert std.trace(std.manifestJson(expr), true);
-          env['self']
+        then env['self']
         else if std.get(exprs[0], 'literal', '') == '$'
         then env['$']
         else root.evalExpr(exprs[0], env, locals);
@@ -361,42 +356,41 @@ local parser = import './parser.libsonnet';
         local binaryop = tuple[1];
         local a = {
           local this = self,
-          left:
+          left(doAssertions):
             if std.isArray(tuple[0])
             then doOperation(tuple[0], opEnv)
             else root.evalExpr(
               tuple[0],
               opEnv + {
-                leftOfSuper: true,
-                [if binaryop == '+' then 'self']+: this.right,
+                doAssertions: doAssertions,
+                [if binaryop == '+' then 'right']+: this.right(false),
               },
               locals
             ),
-          right:
+          right(doAssertions):
             if std.isArray(tuple[2])
             then doOperation(
               tuple[2],
               opEnv + {
+                doAssertions: doAssertions,
                 inBinary: true,
-                [if binaryop == '+' then 'super']+: this.left,
-                [if binaryop == '+' then 'self']+: this.left,
+                [if binaryop == '+' then 'super']+: this.left(false),
+                //[if binaryop == '+' then 'self']+: this.left,
               }
             )
             else root.evalExpr(
               tuple[2],
               opEnv + {
+                doAssertions: doAssertions,
                 inBinary: true,
-                [if binaryop == '+' then 'super']+: this.left,
-                [if binaryop == '+' then 'self']+: this.left,
+                [if binaryop == '+' then 'super']+: this.left(false),
+                //[if binaryop == '+' then 'self']+: this.left,
               },
               locals
             ),
         };
-        local left = a.left;
-        local right = a.right;
-
-        //assert std.trace('aaaa' + std.manifestJson(a.left), true);
-        //assert std.trace('bbbb' + std.manifestJson(tuple[2]), true);
+        local left = a.left(true);
+        local right = a.right(true);
 
         std.get(
           {
@@ -615,18 +609,18 @@ local parser = import './parser.libsonnet';
       );
 
       local isDollar = !std.objectHas(env, '$');
-      //assert std.trace(std.manifestJson(env), true);
+
       local fieldEval(this) =
         root.evalExpr(
           field.expr,
           env + {
             inBinary: false,
-            'self': this,
             parentIsHidden: h == '::',
             [if isDollar then '$']: this,
           },
           locals,
         );
+
       std.get(
         {
           ':': {
@@ -674,7 +668,6 @@ local parser = import './parser.libsonnet';
           root.evalFunction(
             field,
             env + {
-              'self': this,
               [if isDollar then '$']: this,
             },
             locals

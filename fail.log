@@ -1,4 +1,3 @@
 
 ./go-jsonnet-test/vendor/testdata/importbin_nonutf8.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_comp_super.jsonnet
-./go-jsonnet-test/vendor/testdata/object_local_self_super.jsonnet

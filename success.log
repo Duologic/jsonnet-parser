@@ -227,6 +227,7 @@
 ./go-jsonnet-test/vendor/testdata/object_local_from_parent_through_local.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_local.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_local_recursive.jsonnet
+./go-jsonnet-test/vendor/testdata/object_local_self_super.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_local_uses_local_from_outside.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_sum2.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_sum3.jsonnet
