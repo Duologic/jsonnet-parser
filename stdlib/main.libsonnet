@@ -1,5 +1,4 @@
-local a = import '../../crdsonnet/astsonnet/schema.libsonnet';
-local parser = import './parser.libsonnet';
+local parser = import '../parser.libsonnet';
 
 local overrides =
   {
@@ -161,7 +160,7 @@ local evalTemplate(name, arguments) =
     ),
   };
 
-local fromStdJsonnet = importstr './std.jsonnet';
+local fromStdJsonnet = importstr './vendor/github.com/google/jsonnet/stdlib/std.jsonnet';
 local parsedStdJsonnet = parser.new(fromStdJsonnet).parse();
 local linesFromStdJsonnet =
   std.filterMap(
@@ -174,7 +173,7 @@ local linesFromStdJsonnet =
   );
 
 local stdFuncs = std.objectFieldsAll(std);
-local stdJsonnetFuncs = std.objectFieldsAll(import './std.jsonnet');
+local stdJsonnetFuncs = std.objectFieldsAll(import './vendor/github.com/google/jsonnet/stdlib/std.jsonnet');
 local notInStdJsonnet = std.setDiff(stdFuncs, stdJsonnetFuncs);
 
 local linesFromStd =

@@ -134,7 +134,7 @@ local lexer = import './lexer.libsonnet';
             [@"\t", '\t'],
           ]
           // can't simply do [@"\u", '\u'] because jsonnet will not like a `\u` without hex code
-          + (import './unicode.libsonnet'),
+          + (import './unicode/generated.libsonnet'),
           str,
         );
 

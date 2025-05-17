@@ -1,4 +1,3 @@
-
 ./go-jsonnet-test/vendor/testdata/argcapture_builtin_call.jsonnet
 ./go-jsonnet-test/vendor/testdata/array.jsonnet
 ./go-jsonnet-test/vendor/testdata/array_index1.jsonnet
@@ -166,6 +165,7 @@
 ./go-jsonnet-test/vendor/testdata/import2.jsonnet
 ./go-jsonnet-test/vendor/testdata/import3.jsonnet
 ./go-jsonnet-test/vendor/testdata/import4.jsonnet
+./go-jsonnet-test/vendor/testdata/importbin_nonutf8.jsonnet
 ./go-jsonnet-test/vendor/testdata/import.jsonnet
 ./go-jsonnet-test/vendor/testdata/import_twice.jsonnet
 ./go-jsonnet-test/vendor/testdata/import_various_literals.jsonnet
@@ -175,7 +175,6 @@
 ./go-jsonnet-test/vendor/testdata/in.jsonnet
 ./go-jsonnet-test/vendor/testdata/insuper2.jsonnet
 ./go-jsonnet-test/vendor/testdata/insuper3.jsonnet
-./go-jsonnet-test/vendor/testdata/insuper5.jsonnet
 ./go-jsonnet-test/vendor/testdata/insuper7.jsonnet
 ./go-jsonnet-test/vendor/testdata/insuper.jsonnet
 ./go-jsonnet-test/vendor/testdata/lazy.jsonnet

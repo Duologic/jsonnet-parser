@@ -3,9 +3,9 @@ local parser = import './parser.libsonnet';
 {
   local evaluator = self,
 
-  std: (import './std-in-jsonnet-render.libsonnet'),
+  std: (import './stdlib/generated.libsonnet'),
   // slower to evaluate std.jsonnet but it is a good stress test for the evaluator
-  //+ (evaluator + { std: {} }).new('std', importstr './std.jsonnet').eval(),
+  //+ (evaluator + { std: {} }).new('std', importstr './stdlib/vendor/github.com/google/jsonnet/stdlib/std.jsonnet').eval(),
 
   new(filename, file, imports={}, extVars={}): {
     local root = self,

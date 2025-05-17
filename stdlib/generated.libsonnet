@@ -376,7 +376,7 @@ function(evaluator)
                         args.c,
                         args.maxsplits),
 
-    _strReplace:
+    strReplace:
       local params = [
         { id: 'str' },
         { id: 'from' },
@@ -392,9 +392,9 @@ function(evaluator)
           locals,
           evalExpr,
         );
-        std._strReplace(args.str,
-                        args.from,
-                        args.to),
+        std.strReplace(args.str,
+                       args.from,
+                       args.to),
 
     asciiUpper:
       local params = [
@@ -2745,26 +2745,6 @@ function(evaluator)
           evalExpr,
         );
         std.sqrt(args.x),
-
-    strReplace:
-      local params = [
-        { id: 'str' },
-        { id: 'from' },
-        { id: 'to' },
-      ];
-      function(callArgs, env, locals, evalExpr=evaluator.evalExpr)
-        local args = evaluator.evalArgs(
-          params,
-          env,
-          locals,
-          callArgs,
-          env,
-          locals,
-          evalExpr,
-        );
-        std.strReplace(args.str,
-                       args.from,
-                       args.to),
 
     tan:
       local params = [

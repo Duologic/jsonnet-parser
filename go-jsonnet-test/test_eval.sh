@@ -10,7 +10,7 @@ cd -
 
 #    grep -v linter.golden | \                   # Don't test linter tests
 #    grep -v std.makeArray_recursive.golden | \  # Times out, failing test
-#    grep -v 'native.*.golden' | \               # Implementation specific (go-jsonnet native functions I assume)
+#    grep -v 'native.*.golden' | \               # Can succeed, needs adjustments on test scripts
 #    grep -v 'extvar_.*.golden' | \              # Can succeed, needs adjustments on test scripts
 #
 # Succeeds with plain jsonnet, new functions in v0.21.0 that need to land in jrsonnet
@@ -24,9 +24,14 @@ cd -
 #    grep -v foldr_single_element.golden | \
 #    grep -v foldl_string.golden | \
 #    grep -v foldr_string.golden | \
+#
+# Succeeds with plain jsonnet, bug in jrsonnet: https://github.com/CertainLach/jrsonnet/issues/195
+#    grep -v insuper5.golden | \
+
 
 GOLDEN=$(find ${DIRNAME}/vendor/testdata/ -name \*.golden -type f | \
     grep -v linter.golden | \
+    grep -v insuper5.golden | \
     grep -v std.filter7.golden | \
     grep -v std.makeArray_recursive.golden | \
     grep -v 'native.*.golden' | \
@@ -40,11 +45,11 @@ GOLDEN=$(find ${DIRNAME}/vendor/testdata/ -name \*.golden -type f | \
 
 echo "${GOLDEN}" | wc -l
 
-echo > success.log
-echo > fail.log
-echo > gold.log
-echo > nogold.log
-echo > nogolddiff.log
+rm -rf "${DIRNAME}"/success.log
+rm -rf "${DIRNAME}"/fail.log
+rm -rf "${DIRNAME}"/gold.log
+rm -rf "${DIRNAME}"/nogold.log
+
 for F in $GOLDEN; do
     J="${F/golden/jsonnet}"
     set +e
@@ -54,20 +59,19 @@ for F in $GOLDEN; do
         echo "eval: $J"
         EXEC=$(${DIRNAME}/../scripts/eval.sh $J) #> /dev/null
         if [[ ${?} -eq 0 ]]; then
-            echo "$J" >> success.log
+            echo "$J" >> "${DIRNAME}"/success.log
             GOLD=$(jrsonnet $J)
             if [ "${EXEC}" = "${GOLD}" ]; then
-                echo "$J" >> gold.log
+                echo "$J" >> "${DIRNAME}"/gold.log
             else
-                echo "$J" >> nogold.log
-                set +e
-                echo "$J" >> nogolddiff.log
-                diff  <(echo "$EXEC" ) <(echo "$GOLD") >> nogolddiff.log
-                set -e
+                echo "$J" >> "${DIRNAME}"/nogold.log
             fi
         else
-            echo "$J" >> fail.log
+            echo "$J" >> "${DIRNAME}"/fail.log
         fi
     fi
     set -e
 done
+
+[ -f "${DIRNAME}"/fail.log ] && exit 1
+exit 0

@@ -21,11 +21,11 @@ if [ $JSONNET_BIN = 'jrsonnet' ]; then
       --max-stack 1000000 \
       --trace-format explaining \
       -J $DIRNAME/../vendor \
-      -e "(import '$DIRNAME/../eval.libsonnet').new('$fr', importstr '$f', import '$DIRNAME/../go-jsonnet-test-imports.libsonnet', {codeVar: 6}).eval()"
+      -e "(import '$DIRNAME/../eval.libsonnet').new('$fr', importstr '$f', import '$DIRNAME/../go-jsonnet-test/imports.libsonnet', {codeVar: 6}).eval()"
 elif [ $JSONNET_BIN = 'jsonnet' ]; then
   # slower but more correct
   jsonnet \
       --max-stack 1000000 \
       -J $DIRNAME/../vendor \
-      -e "(import '$DIRNAME/../eval.libsonnet').new('$fr', importstr '$f', import '$DIRNAME/../go-jsonnet-test-imports.libsonnet', {codeVar: 6}).eval()"
+      -e "(import '$DIRNAME/../eval.libsonnet').new('$fr', importstr '$f', import '$DIRNAME/../go-jsonnet-test/imports.libsonnet', {codeVar: 6}).eval()"
 fi
