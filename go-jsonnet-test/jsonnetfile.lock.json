@@ -10,6 +10,16 @@
       },
       "version": "fed90cd9cd733a87f9fb27cfb32a3e08a7695603",
       "sum": "5gTzx5p9Nlm2nMPOODnwIhXdEFKyDz9eFT3lL3IL1qE="
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/jsonnet-libs/xtd.git",
+          "subdir": ""
+        }
+      },
+      "version": "4eee017d21cb63a303925d1dcd9fc5c496809b46",
+      "sum": "Kh0GbIycNmJPzk6IOMXn1BbtLNyaiiimclYk7+mvsns="
     }
   ],
   "legacyImports": false
