@@ -11,9 +11,11 @@ fi
 
 f=$(realpath $1)
 
+fr=$(realpath --relative-to=$PWD $1)
+
 jrsonnet \
     --os-stack 10000 \
     --max-stack 1000000 \
     --trace-format explaining \
     -J $DIRNAME/../vendor \
-    -e "(import '$DIRNAME/../eval.libsonnet').new('$f', importstr '$f', import '$DIRNAME/../go-jsonnet-test-imports.libsonnet').eval()"
+    -e "(import '$DIRNAME/../eval.libsonnet').new('$fr', importstr '$f', import '$DIRNAME/../go-jsonnet-test-imports.libsonnet').eval()"

@@ -209,6 +209,7 @@
 ./go-jsonnet-test/vendor/testdata/object_comp_local2.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_comp_local3.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_comp_local.jsonnet
+./go-jsonnet-test/vendor/testdata/object_comp_super.jsonnet
 ./go-jsonnet-test/vendor/testdata/object.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_hidden.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_invariant12.jsonnet

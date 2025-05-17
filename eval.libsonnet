@@ -572,8 +572,13 @@ local parser = import './parser.libsonnet';
       local imp = imports[expr.path];
       if std.isString(imp)
       then
+        local splitFilename = std.splitLimitR(filename, '/', 1);
+        local importFilename =
+          if std.startsWith(expr.path, '/')
+          then expr.path
+          else splitFilename[0] + '/' + expr.path;
         local parsed = parser.new(imp).parse();
-        evaluator.new(expr.path, parsed, imports).eval()
+        evaluator.new(importFilename, parsed, imports).eval()
       else
         imp,
 
@@ -615,6 +620,7 @@ local parser = import './parser.libsonnet';
           field.expr,
           env + {
             inBinary: false,
+            'self': this,
             parentIsHidden: h == '::',
             [if isDollar then '$']: this,
           },
@@ -639,7 +645,7 @@ local parser = import './parser.libsonnet';
           },
           '+:': {
             local this = self,
-            [fieldname]: fieldEval(this),
+            [fieldname]+: fieldEval(this),
           },
           '+::': {
             local this = self,

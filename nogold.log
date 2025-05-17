@@ -1,9 +1,2 @@
 
 ./go-jsonnet-test/vendor/testdata/insuper5.jsonnet
-./go-jsonnet-test/vendor/testdata/stdlib_smoke_test.jsonnet
-./go-jsonnet-test/vendor/testdata/std.thisFile2.jsonnet
-./go-jsonnet-test/vendor/testdata/std.thisFile.jsonnet
-./go-jsonnet-test/vendor/testdata/supersugar4.jsonnet
-./go-jsonnet-test/vendor/testdata/supersugar6.jsonnet
-./go-jsonnet-test/vendor/testdata/supersugar7.jsonnet
-./go-jsonnet-test/vendor/testdata/supersugar.jsonnet

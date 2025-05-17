@@ -208,6 +208,7 @@
 ./go-jsonnet-test/vendor/testdata/object_comp_local2.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_comp_local3.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_comp_local.jsonnet
+./go-jsonnet-test/vendor/testdata/object_comp_super.jsonnet
 ./go-jsonnet-test/vendor/testdata/object.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_hidden.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_invariant12.jsonnet
@@ -338,6 +339,7 @@
 ./go-jsonnet-test/vendor/testdata/std.length_object_sum.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.length_object_with_hidden.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.length_string.jsonnet
+./go-jsonnet-test/vendor/testdata/stdlib_smoke_test.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.lstripChars.multibyte.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.makeArray.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.makeArrayNamed2.jsonnet
@@ -384,6 +386,8 @@
 ./go-jsonnet-test/vendor/testdata/std.sort2.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.sort.jsonnet
 ./go-jsonnet-test/vendor/testdata/std_substr.jsonnet
+./go-jsonnet-test/vendor/testdata/std.thisFile2.jsonnet
+./go-jsonnet-test/vendor/testdata/std.thisFile.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.toString2.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.toString3.jsonnet
 ./go-jsonnet-test/vendor/testdata/std.toString4.jsonnet
@@ -407,8 +411,12 @@
 ./go-jsonnet-test/vendor/testdata/strReplace.jsonnet
 ./go-jsonnet-test/vendor/testdata/supersugar2.jsonnet
 ./go-jsonnet-test/vendor/testdata/supersugar3.jsonnet
+./go-jsonnet-test/vendor/testdata/supersugar4.jsonnet
 ./go-jsonnet-test/vendor/testdata/supersugar5.jsonnet
+./go-jsonnet-test/vendor/testdata/supersugar6.jsonnet
+./go-jsonnet-test/vendor/testdata/supersugar7.jsonnet
 ./go-jsonnet-test/vendor/testdata/supersugar9.jsonnet
+./go-jsonnet-test/vendor/testdata/supersugar.jsonnet
 ./go-jsonnet-test/vendor/testdata/true.jsonnet
 ./go-jsonnet-test/vendor/testdata/type_array.jsonnet
 ./go-jsonnet-test/vendor/testdata/type_builtin_function.jsonnet
