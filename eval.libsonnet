@@ -7,7 +7,7 @@ local parser = import './parser.libsonnet';
   // slower to evaluate std.jsonnet but it is a good stress test for the evaluator
   //+ (evaluator + { std: {} }).new('std', importstr './std.jsonnet').eval(),
 
-  new(filename, file, imports={}): {
+  new(filename, file, imports={}, extVars={}): {
     local root = self,
     local expr =
       if std.isString(file)
@@ -30,6 +30,22 @@ local parser = import './parser.libsonnet';
         locals={
           std: evaluator.std(root) + {
             thisFile: filename,
+
+            extVar:
+              local params = [
+                { id: 'x' },
+              ];
+              function(callArgs, env, locals, evalExpr=root.evalExpr)
+                local args = root.evalArgs(
+                  params,
+                  env,
+                  locals,
+                  callArgs,
+                  env,
+                  locals,
+                  evalExpr,
+                );
+                extVars[args.x],
 
             length:
               local params = [
@@ -594,10 +610,8 @@ local parser = import './parser.libsonnet';
     evalExprInSuper(expr, env, locals):
       root.evalExpr(expr.expr, env, locals) in env['super'],
 
-    // FIXME: I don't understand how tailstrict works
-    // ref: https://github.com/google/jsonnet/issues/343
     evalTailstrict(expr, env, locals):
-      root.evalExpr(expr.expr, env + { 'tailstrict': true }, locals) tailstrict,
+      root.evalExpr(expr.expr, env, locals) tailstrict,
 
     evalField(field, env, locals):
       local fieldname = root.evalFieldname(field.fieldname, env, locals);
@@ -621,7 +635,6 @@ local parser = import './parser.libsonnet';
           env + {
             inBinary: false,
             'self': this,
-            parentIsHidden: h == '::',
             [if isDollar then '$']: this,
           },
           locals,
@@ -631,7 +644,6 @@ local parser = import './parser.libsonnet';
         {
           ':': {
             local this = self,
-            assert field.type == 'field' : "couldn't manifest function as JSON",
             [fieldname]: fieldEval(this),
           },
           '::': {
@@ -640,7 +652,6 @@ local parser = import './parser.libsonnet';
           },
           ':::': {
             local this = self,
-            assert field.type == 'field' : "couldn't manifest function as JSON",
             [fieldname]::: fieldEval(this),
           },
           '+:': {
@@ -661,24 +672,37 @@ local parser = import './parser.libsonnet';
 
     evalFieldFunction(field, env, locals):
       local fieldname = root.evalFieldname(field.fieldname, env, locals);
-      local op =
+      local h =
         if std.get(field, 'hidden', false)
         then '::'
         else field.h;
-      // FIXME: throw error
-      //assert std.get(env, 'parentIsHidden', false) || op == '::' : "couldn't manifest function as JSON";
+
       local isDollar = !std.objectHas(env, '$');
-      {
-        local this = self,
-        [fieldname]::
-          root.evalFunction(
-            field,
-            env + {
-              [if isDollar then '$']: this,
-            },
-            locals
-          ),
-      },
+
+      local fieldEval(this) =
+        root.evalFunction(
+          field,
+          env + {
+            inBinary: false,
+            'self': this,
+            [if isDollar then '$']: this,
+          },
+          locals
+        );
+
+      std.get(
+        {
+          ':': {
+            local this = self,
+            [fieldname]: fieldEval(this),
+          },
+          '::': {
+            local this = self,
+            [fieldname]:: fieldEval(this),
+          },
+        },
+        h,
+      ),
 
     evalCompspec(forspec, compspec, env, locals):
       std.foldl(

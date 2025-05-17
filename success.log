@@ -218,6 +218,7 @@
 ./go-jsonnet-test/vendor/testdata/object_invariant5.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_invariant6.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_invariant.jsonnet
+./go-jsonnet-test/vendor/testdata/object_invariant_perf.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_invariant_plus3.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_invariant_plus4.jsonnet
 ./go-jsonnet-test/vendor/testdata/object_invariant_plus5.jsonnet
@@ -418,6 +419,12 @@
 ./go-jsonnet-test/vendor/testdata/supersugar7.jsonnet
 ./go-jsonnet-test/vendor/testdata/supersugar9.jsonnet
 ./go-jsonnet-test/vendor/testdata/supersugar.jsonnet
+./go-jsonnet-test/vendor/testdata/tailstrict4.jsonnet
+./go-jsonnet-test/vendor/testdata/tailstrict5.jsonnet
+./go-jsonnet-test/vendor/testdata/tailstrict.jsonnet
+./go-jsonnet-test/vendor/testdata/tailstrict_operator1.jsonnet
+./go-jsonnet-test/vendor/testdata/tailstrict_operator2.jsonnet
+./go-jsonnet-test/vendor/testdata/tailstrict_operator3.jsonnet
 ./go-jsonnet-test/vendor/testdata/true.jsonnet
 ./go-jsonnet-test/vendor/testdata/type_array.jsonnet
 ./go-jsonnet-test/vendor/testdata/type_builtin_function.jsonnet
