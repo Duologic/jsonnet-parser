@@ -104,12 +104,19 @@ jobs:
           mv jsonnet "$HOME/.local/bin"
           chmod u+x "$HOME/.local/bin/jsonnet"
 
-      - name: Install jrsonnet
-        shell: bash
-        run: |
-          wget https://github.com/CertainLach/jrsonnet/releases/download/${JRSONNET_VERSION}/jrsonnet-linux-amd64
-          mv jrsonnet-linux-amd64 "$HOME/.local/bin/jrsonnet"
-          chmod u+x "$HOME/.local/bin/jrsonnet"
+      #- name: Install jrsonnet
+      #  shell: bash
+      #  run: |
+      #    wget https://github.com/CertainLach/jrsonnet/releases/download/${JRSONNET_VERSION}/jrsonnet-linux-amd64
+      #    mv jrsonnet-linux-amd64 "$HOME/.local/bin/jrsonnet"
+      #    chmod u+x "$HOME/.local/bin/jrsonnet"
+
+      - name: Install jrsonnet from source
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: jrsonnet
+          git: https://github.com/CertainLach/jrsonnet
+          commit: '6baa18de6571b015cd2cf1eaac93030250a136a3'
 
       - name: Install jsonnet-bundler
         shell: bash
