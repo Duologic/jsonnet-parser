@@ -1,9 +1,10 @@
 name: CI
 on:
-  - pull_request
-  - push:
-    - master
-    - main
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
 
 env:
   JSONNET_VERSION: '0.20.0'
