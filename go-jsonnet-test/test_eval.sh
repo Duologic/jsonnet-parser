@@ -8,6 +8,11 @@ cd $DIRNAME
 jb install
 cd -
 
+cd $DIRNAME/..
+jb install
+cd -
+
+
 #    grep -v linter.golden | \                   # Don't test linter tests
 #    grep -v std.makeArray_recursive.golden | \  # Times out, failing test
 #    grep -v 'native.*.golden' | \               # Can succeed, needs adjustments on test scripts
