@@ -21,3 +21,26 @@ test_lexer:
 .PHONY: test_parser
 test_parser:
 	./go-jsonnet-test/test_parser.sh
+
+.PHONY: test_eval
+test_eval:
+	./go-jsonnet-test/test_eval.sh
+
+stdlib/generated.libsonnet:
+	jrsonnet --max-stack 100000 -S -J vendor ./stdlib/main.libsonnet > ./stdlib/generated.libsonnet
+	jsonnetfmt -i ./stdlib/generated.libsonnet
+
+unicode/generated.libsonnet:
+	jrsonnet ./unicode/main.libsonnet | sed 's;"\\\\u\(.*\)",\?;["\\\\u\1", "\\u\1"],;g' > unicode/generated.libsonnet
+	jsonnetfmt -i ./unicode/generated.libsonnet
+
+go-jsonnet-test/imports.libsonnet:
+	echo '{' > ./go-jsonnet-test/imports.libsonnet
+	cd ./go-jsonnet-test/vendor/github.com/google/go-jsonnet/testdata && \
+		find . -type f | \
+		sort | \
+		sed 's;./\(.*\);"\1": importstr "./vendor/github.com/google/go-jsonnet/testdata/\1",;' >> \
+		../../../../../../go-jsonnet-test/imports.libsonnet
+	echo '}' >> ./go-jsonnet-test/imports.libsonnet
+	echo '+ { "nonutf8.bin": importbin "./vendor/github.com/google/go-jsonnet/testdata/nonutf8.bin" }' >> ./go-jsonnet-test/imports.libsonnet
+	jsonnetfmt -i ./go-jsonnet-test/imports.libsonnet

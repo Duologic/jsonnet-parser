@@ -1,5 +1,10 @@
 name: CI
-on: [pull_request, push]
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
 
 env:
   JSONNET_VERSION: '0.20.0'
@@ -82,3 +87,48 @@ jobs:
 
       - name: Test Parser
         run: make test_parser
+
+  test_eval:
+    name: Test Evaluator
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PATH
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install jsonnet
+        shell: bash
+        run: |
+          wget https://github.com/google/go-jsonnet/releases/download/v${JSONNET_VERSION}/go-jsonnet_${JSONNET_VERSION}_Linux_x86_64.tar.gz
+          tar --extract --file=go-jsonnet_${JSONNET_VERSION}_Linux_x86_64.tar.gz jsonnet
+          mv jsonnet "$HOME/.local/bin"
+          chmod u+x "$HOME/.local/bin/jsonnet"
+
+      #- name: Install jrsonnet
+      #  shell: bash
+      #  run: |
+      #    wget https://github.com/CertainLach/jrsonnet/releases/download/${JRSONNET_VERSION}/jrsonnet-linux-amd64
+      #    mv jrsonnet-linux-amd64 "$HOME/.local/bin/jrsonnet"
+      #    chmod u+x "$HOME/.local/bin/jrsonnet"
+
+      - name: Install jrsonnet from source
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: jrsonnet
+          git: https://github.com/CertainLach/jrsonnet
+          commit: '6baa18de6571b015cd2cf1eaac93030250a136a3'
+
+      - name: Install jsonnet-bundler
+        shell: bash
+        run: |
+          wget https://github.com/jsonnet-bundler/jsonnet-bundler/releases/download/v${JSONNET_BUNDLER_VERSION}/jb-linux-amd64
+          mv jb-linux-amd64 "$HOME/.local/bin/jb"
+          chmod u+x "$HOME/.local/bin/jb"
+
+      - name: Test Evaluator
+        run: make test_eval

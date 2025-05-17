@@ -118,9 +118,30 @@ local lexer = import './lexer.libsonnet';
       local tokenValue = token[1];
       local expected = ['STRING_SINGLE', 'STRING_DOUBLE'];
       assert std.member(expected, token[0]) : expmsg(expected, token);
+      local unescapeString(str) =
+        std.foldl(
+          function(acc, c)
+            std.strReplace(acc, c[0], c[1]),
+          [
+            [@'\"', '"'],
+            [@"\'", "'"],
+            [@"\\", @"\"],
+            [@"\/", '/'],
+            [@"\b", '\b'],
+            [@"\f", '\f'],
+            [@"\n", '\n'],
+            [@"\r", '\r'],
+            [@"\t", '\t'],
+          ]
+          // can't simply do [@"\u", '\u'] because jsonnet will not like a `\u` without hex code
+          + (import './unicode/generated.libsonnet'),
+          str,
+        );
+
+      local value = unescapeString(tokenValue[1:std.length(tokenValue) - 1]);
       {
         type: 'string',
-        string: tokenValue[1:std.length(tokenValue) - 1],
+        string: value,
         cursor:: index + 1,
       },
 
@@ -129,9 +150,14 @@ local lexer = import './lexer.libsonnet';
       local tokenValue = token[1];
       local expected = ['VERBATIM_STRING_SINGLE', 'VERBATIM_STRING_DOUBLE'];
       assert std.member(expected, token[0]) : expmsg(expected, token);
+      local value = tokenValue[2:std.length(tokenValue) - 1];
+      local string =
+        if token[0] == 'VERBATIM_STRING_DOUBLE'
+        then std.strReplace(value, '""', '"')
+        else std.strReplace(value, "''", "'");
       {
         type: 'string',
-        string: tokenValue[2:std.length(tokenValue) - 1],
+        string: string,
         verbatim: true,
         cursor:: index + 1,
       },
@@ -351,7 +377,7 @@ local lexer = import './lexer.libsonnet';
       assert lexicon[obj.cursor][1] == '[' : expmsg('[', lexicon[obj.cursor]);
       local literal(cursor) = {
         type: 'literal',
-        literal: '',
+        literal: 'null',
         cursor:: cursor,
       };
 
@@ -562,13 +588,20 @@ local lexer = import './lexer.libsonnet';
       },
 
     parseImplicitPlus(obj, endTokens, inObject):
-      local object = self.parseObject(obj.cursor, endTokens, inObject);
+      local object = self.parseExpr(obj.cursor, endTokens, inObject);
       {
-        type: 'implicit_plus',
-        expr: obj,
-        object: object,
+        type: 'binary',
+        binaryop: '+',
+        left_expr: obj,
+        right_expr: object,
         cursor:: object.cursor,
       },
+    //{
+    //  type: 'implicit_plus',
+    //  expr: obj,
+    //  object: object,
+    //  cursor:: object.cursor,
+    //},
 
     parseAnonymousFunction(index, endTokens, inObject):
       assert lexicon[index][1] == 'function' : expmsg('function', lexicon[index]);
