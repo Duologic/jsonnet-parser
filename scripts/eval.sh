@@ -5,16 +5,13 @@ IFS=$'\n\t'
 DIRNAME="$(dirname "$0")"
 
 if [ "$#" != 1 ]; then
-  echo "Usage: $(basename "$0") <file>"
+  echo "Usage: $(basename "$0") <FILE>"
   exit 1
 fi
 
-f=$(realpath $1)
+FILE=$(realpath --relative-to=$PWD $1)
 
-fr=$(realpath --relative-to=$PWD $1)
-
-imports=$("${DIRNAME}"/imports.sh $fr)
-
+IMPORTS=$("${DIRNAME}"/imports.sh "${FILE}")
 JSONNET_BIN=${JSONNET_BIN:=jrsonnet}
 
 if [ $JSONNET_BIN = 'jrsonnet' ]; then
@@ -23,11 +20,11 @@ if [ $JSONNET_BIN = 'jrsonnet' ]; then
       --max-stack 1000000 \
       --trace-format explaining \
       -J $DIRNAME/../vendor \
-      -e "(import '$DIRNAME/../eval.libsonnet').new('$fr', importstr '$f', $imports, {codeVar: 6}).eval()"
+      -e "(import '$DIRNAME/../eval.libsonnet').new('${FILE}', importstr '${FILE}', ${IMPORTS}, {codeVar: 6}).eval()"
 elif [ $JSONNET_BIN = 'jsonnet' ]; then
   # slower but more correct
   jsonnet \
       --max-stack 1000000 \
       -J $DIRNAME/../vendor \
-      -e "(import '$DIRNAME/../eval.libsonnet').new('$fr', importstr '$f', $imports, {codeVar: 6}).eval()"
+      -e "(import '$DIRNAME/../eval.libsonnet').new('${FILE}', importstr '${FILE}', ${IMPORTS}, {codeVar: 6}).eval()"
 fi
