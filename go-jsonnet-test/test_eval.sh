@@ -78,5 +78,5 @@ for F in $GOLDEN; do
     set -e
 done
 
-[ -f "${DIRNAME}"/fail.log ] && exit 1
+[ -f "${DIRNAME}"/fail.log ] && cat "${DIRNAME}"/fail.log && exit 1
 exit 0
