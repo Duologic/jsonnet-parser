@@ -34,7 +34,7 @@ cd -
 #    grep -v insuper5.golden | \
 
 
-GOLDEN=$(find ${DIRNAME}/vendor/testdata/ -name \*.golden -type f | \
+GOLDEN=$(find ${DIRNAME}/vendor/github.com/google/go-jsonnet/testdata/ -name \*.golden -type f | \
     grep -v linter.golden | \
     grep -v insuper5.golden | \
     grep -v std.filter7.golden | \
