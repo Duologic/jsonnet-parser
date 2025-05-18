@@ -585,7 +585,10 @@ local parser = import './parser.libsonnet';
       ),
 
     local getImportFilename(path) =
-      local splitFilename = std.splitLimitR(filename, '/', 1);
+      local root =
+        if std.length(std.findSubstr('/', filename)) > 0
+        then std.splitLimitR(filename, '/', 1)[0] + '/'
+        else '';
       local normalized =
         if std.startsWith(path, './')
         then path[2:]
@@ -593,7 +596,7 @@ local parser = import './parser.libsonnet';
 
       if std.startsWith(path, '/')
       then path
-      else splitFilename[0] + '/' + normalized,
+      else root + normalized,
 
 
     evalImportStatement(expr, env, locals):
