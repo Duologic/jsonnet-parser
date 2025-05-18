@@ -7,7 +7,7 @@ local parser = import './parser.libsonnet';
   // slower to evaluate std.jsonnet but it is a good stress test for the evaluator
   //+ (evaluator + { std: {} }).new('std', importstr './stdlib/vendor/github.com/google/jsonnet/stdlib/std.jsonnet').eval(),
 
-  new(filename, file, imports={}, extVars={}): {
+  new(filename, file, imports={ imports: {}, importbins: {} }, extVars={}): {
     local root = self,
     local expr =
       if std.isString(file)
@@ -584,25 +584,32 @@ local parser = import './parser.libsonnet';
           expression
       ),
 
+    local getImportFilename(path) =
+      local splitFilename = std.splitLimitR(filename, '/', 1);
+      local normalized =
+        if std.startsWith(path, './')
+        then path[2:]
+        else path;
+
+      if std.startsWith(path, '/')
+      then path
+      else splitFilename[0] + '/' + normalized,
+
+
     evalImportStatement(expr, env, locals):
-      local imp = imports[expr.path];
+      local importFilename = getImportFilename(expr.path);
+      local imp = imports.imports[importFilename];
       if std.isString(imp)
-      then
-        local splitFilename = std.splitLimitR(filename, '/', 1);
-        local importFilename =
-          if std.startsWith(expr.path, '/')
-          then expr.path
-          else splitFilename[0] + '/' + expr.path;
-        local parsed = parser.new(imp).parse();
-        evaluator.new(importFilename, parsed, imports).eval()
-      else
-        imp,
+      then evaluator.new(importFilename, imp, imports).eval()
+      else imp,
 
     evalImportStrStatement(expr, env, locals):
-      imports[expr.path],
+      local importFilename = getImportFilename(expr.path);
+      imports.imports[importFilename],
 
     evalImportBinStatement(expr, env, locals):
-      imports[expr.path],
+      local importFilename = getImportFilename(expr.path);
+      imports.importbins[importFilename],
 
     evalErrorExpr(expr, env, locals):
       error root.evalExpr(expr.expr, env, locals),
