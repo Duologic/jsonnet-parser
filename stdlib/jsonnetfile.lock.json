@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/google/jsonnet.git",
+          "subdir": "stdlib"
+        }
+      },
+      "version": "bc7425ed7d6b6c4ed6b6b15fd924517a178b7318",
+      "sum": "MQ5UO/OzKGaVAIpuQ/7GkDJgd2mXXldRnQJ0lqcX0tg="
+    }
+  ],
+  "legacyImports": false
+}
