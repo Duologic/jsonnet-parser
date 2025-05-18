@@ -7,9 +7,9 @@ fmt:
 			-o -name '*.jsonnet' -print | \
 		xargs -n 1 -- jsonnetfmt --no-use-implicit-plus -i
 
-.PHONY: example.libsonnet.output.json
-example.libsonnet.output.json:
-	jrsonnet -J vendor example.libsonnet --max-stack 10000 --os-stack 50 > example.libsonnet.output.json
+.PHONY: examples/parser.libsonnet.output.json
+examples/parser.libsonnet.output.json:
+	jrsonnet -J vendor examples/parser.libsonnet --max-stack 10000 --os-stack 50 > examples/parser.libsonnet.output.json
 
 .PHONY: test
 test: test_lexer test_parser
