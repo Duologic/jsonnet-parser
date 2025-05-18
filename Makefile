@@ -11,6 +11,10 @@ fmt:
 examples/parser.libsonnet.output.json:
 	jrsonnet -J vendor examples/parser.libsonnet --max-stack 10000 --os-stack 50 > examples/parser.libsonnet.output.json
 
+.PHONY: examples/eval.libsonnet.output.json
+examples/eval.libsonnet.output.json:
+	jrsonnet -J vendor examples/eval.libsonnet --max-stack 10000 --os-stack 50 > examples/eval.libsonnet.output.json
+
 .PHONY: test
 test: test_lexer test_parser
 
