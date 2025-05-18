@@ -107,7 +107,11 @@ jobs:
           wget https://github.com/google/go-jsonnet/releases/download/v${JSONNET_VERSION}/go-jsonnet_${JSONNET_VERSION}_Linux_x86_64.tar.gz
           tar --extract --file=go-jsonnet_${JSONNET_VERSION}_Linux_x86_64.tar.gz jsonnet
           mv jsonnet "$HOME/.local/bin"
+          mv jsonnet-deps "$HOME/.local/bin"
+          mv jsonnetfmt "$HOME/.local/bin"
           chmod u+x "$HOME/.local/bin/jsonnet"
+          chmod u+x "$HOME/.local/bin/jsonnet-deps"
+          chmod u+x "$HOME/.local/bin/jsonnetfmt"
 
       #- name: Install jrsonnet
       #  shell: bash
